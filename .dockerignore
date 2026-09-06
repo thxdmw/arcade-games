@@ -1,0 +1,11 @@
+.git
+.gitignore
+.idea
+.tmp-emulator-inspect
+node_modules
+public/emulatorjs
+runtime
+tests
+docs
+*.log
+*.local

@@ -1,0 +1,50 @@
+kind: pipeline
+name: arcade-games-deploy
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: verify
+    image: node:22-alpine
+    commands:
+      - npm ci --omit=optional
+      - npm run prepare:emulator
+      - npm test
+      - npm run check
+
+  - name: deploy
+    image: appleboy/drone-ssh
+    settings:
+      host:
+        from_secret: ssh_host
+      port:
+        from_secret: ssh_port
+      username:
+        from_secret: ssh_username
+      password:
+        from_secret: ssh_password
+      envs:
+        - ARCADE_REPOSITORY_URL
+      command_timeout: 30m
+      script:
+        - set -eu
+        - sudo mkdir -p /app/arcade-games
+        - |
+          if [ ! -d "/app/arcade-games/.git" ]; then
+            sudo git clone "${ARCADE_REPOSITORY_URL}" /app/arcade-games
+          fi
+        - cd /app/arcade-games
+        - sudo git fetch --prune origin master
+        - sudo git checkout --force --detach ${DRONE_COMMIT_SHA}
+        - sudo env DEPLOY_RELEASE_TAG=${DRONE_COMMIT_SHA} bash ./deploy.sh
+    environment:
+      ARCADE_REPOSITORY_URL:
+        from_secret: arcade_repository_url
+
+trigger:
+  event:
+    - push
+  branch:
+    - master

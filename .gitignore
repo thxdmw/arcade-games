@@ -1,0 +1,20 @@
+# IDE
+.idea/
+
+# 依赖与生成的模拟器运行资源
+node_modules/
+public/emulatorjs/
+.tmp-emulator-inspect/
+
+# 游戏版权资源只允许本地或服务器挂载
+runtime/roms/*
+!runtime/roms/.gitkeep
+runtime/bios/*
+!runtime/bios/.gitkeep
+runtime/covers/*
+!runtime/covers/.gitkeep
+
+# 日志与本地配置
+*.log
+*.local
+.DS_Store

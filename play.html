@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#050607">
+    <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/styles.css">
+    <title>正在装载 · Arcade Vault</title>
+  </head>
+  <body class="player-page">
+    <header class="player-header">
+      <a class="back-link" href="/" aria-label="返回游戏大厅">← <span>返回大厅</span></a>
+      <div class="player-title">
+        <span id="game-platform">ARCADE</span>
+        <strong id="game-title">正在装载游戏</strong>
+      </div>
+      <button class="icon-button" id="fullscreen" type="button">全屏</button>
+    </header>
+
+    <main class="player-main">
+      <section class="emulator-shell" id="emulator-shell">
+        <div id="game"></div>
+        <div class="boot-panel" id="boot-panel">
+          <div class="loader-ring" aria-hidden="true"></div>
+          <p class="eyebrow">SYSTEM BOOT</p>
+          <h1 id="boot-title">正在检查游戏资源</h1>
+          <p id="boot-message">ROM 只会在当前浏览器中交给模拟器处理。</p>
+        </div>
+        <div class="resume-panel" id="resume-panel" hidden>
+          <p class="eyebrow">LOCAL SAVE FOUND</p>
+          <h2>发现上次的即时存档</h2>
+          <p id="resume-time"></p>
+          <div>
+            <button class="primary-button" id="resume-game" type="button">继续上次</button>
+            <button class="secondary-button" id="fresh-start" type="button">正常启动</button>
+          </div>
+        </div>
+        <div class="error-panel" id="error-panel" hidden>
+          <span>!</span>
+          <h2 id="error-title">游戏无法启动</h2>
+          <p id="error-message"></p>
+          <a class="primary-button" href="/">返回大厅</a>
+        </div>
+      </section>
+
+      <aside class="player-help">
+        <div class="help-card">
+          <p class="eyebrow">CONTROLS</p>
+          <h2>默认操作</h2>
+          <dl>
+            <div><dt>方向</dt><dd>W A S D</dd></div>
+            <div><dt>动作</dt><dd>J K U I</dd></div>
+            <div><dt>投币</dt><dd>5</dd></div>
+            <div><dt>开始</dt><dd>Enter</dd></div>
+          </dl>
+          <p>数字 5 投币、Enter 开始；“控制设置”窗口打开时会暂时停用游戏输入。</p>
+        </div>
+        <div class="help-card save-help">
+          <p class="eyebrow">LOCAL SAVE</p>
+          <h2>存档在这台设备</h2>
+          <p>模拟器自动保存 NVRAM。点击工具栏的保存状态按钮，还会记录一个“继续上次”存档。</p>
+          <span class="save-indicator" id="save-indicator"><i></i>等待游戏启动</span>
+        </div>
+      </aside>
+    </main>
+
+    <script type="module" src="/assets/player.js"></script>
+  </body>
+</html>

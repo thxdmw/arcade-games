@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "resources": {
+    "roms": "/roms/",
+    "bios": "/bios/",
+    "covers": "/covers/"
+  },
+  "games": [
+    {
+      "id": "kof97",
+      "title": "拳皇 '97",
+      "series": "拳皇",
+      "genre": "格斗",
+      "platform": "Neo Geo",
+      "core": "fbneo",
+      "rom": "kof97.zip",
+      "bios": "neogeo.zip",
+      "cover": "kof97.webp",
+      "year": 1997,
+      "accent": "#f1ff3f",
+      "featured": true,
+      "description": "经典三人组队格斗，适合键盘双人或连接手柄游玩。"
+    },
+    {
+      "id": "kof98",
+      "title": "拳皇 '98",
+      "series": "拳皇",
+      "genre": "格斗",
+      "platform": "Neo Geo",
+      "core": "fbneo",
+      "rom": "kof98.zip",
+      "bios": "neogeo.zip",
+      "cover": "kof98.webp",
+      "year": 1998,
+      "accent": "#ff7048",
+      "description": "系列梦幻对决篇，角色阵容与系统完成度都很高。"
+    },
+    {
+      "id": "kof2002",
+      "title": "拳皇 2002",
+      "series": "拳皇",
+      "genre": "格斗",
+      "platform": "Neo Geo",
+      "core": "fbneo",
+      "rom": "kof2002.zip",
+      "bios": "neogeo.zip",
+      "cover": "kof2002.webp",
+      "year": 2002,
+      "accent": "#63d8ff",
+      "description": "快节奏对战与 MAX 模式，十周年改版常用的父 ROM。"
+    },
+    {
+      "id": "kof10th",
+      "title": "拳皇十周年",
+      "series": "拳皇",
+      "genre": "格斗",
+      "platform": "Neo Geo · Hack",
+      "core": "fbneo",
+      "rom": "kof10th.zip",
+      "parentRom": "kof2002.zip",
+      "bios": "neogeo.zip",
+      "cover": "kof10th.webp",
+      "year": 2005,
+      "accent": "#e6a2ff",
+      "description": "基于拳皇 2002 的十周年改版，需要同时挂载匹配的父 ROM。"
+    },
+    {
+      "id": "kov",
+      "title": "三国战纪",
+      "series": "三国战纪",
+      "genre": "动作过关",
+      "platform": "IGS PGM",
+      "core": "fbneo",
+      "rom": "kov.zip",
+      "bios": "pgm.zip",
+      "cover": "kov.webp",
+      "year": 1999,
+      "accent": "#ffb23f",
+      "description": "多人横版动作过关，支持键盘映射与浏览器手柄。"
+    },
+    {
+      "id": "kovplus",
+      "title": "三国战纪 Plus",
+      "series": "三国战纪",
+      "genre": "动作过关",
+      "platform": "IGS PGM",
+      "core": "fbneo",
+      "rom": "kovplus.zip",
+      "parentRom": "kov.zip",
+      "bios": "pgm.zip",
+      "cover": "kovplus.webp",
+      "year": 1999,
+      "accent": "#78efa8",
+      "description": "增强版本，作为克隆 set 运行时需要匹配的原版父 ROM。"
+    }
+  ]
+}

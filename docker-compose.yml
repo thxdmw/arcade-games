@@ -1,0 +1,13 @@
+services:
+  arcade-games:
+    build: .
+    image: arcade-games:local
+    container_name: arcade-games-web
+    restart: unless-stopped
+    ports:
+      - "${ARCADE_HOST_PORT:-20002}:80"
+    volumes:
+      - ./runtime/roms:/usr/share/nginx/html/roms:ro
+      - ./runtime/bios:/usr/share/nginx/html/bios:ro
+      - ./runtime/covers:/usr/share/nginx/html/covers:ro
+      - ./config:/usr/share/nginx/html/config:ro

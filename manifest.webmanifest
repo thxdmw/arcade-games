@@ -1,0 +1,15 @@
+{
+  "name": "Arcade Vault 网页街机厅",
+  "short_name": "Arcade Vault",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "icons": [
+    {
+      "src": "/assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
