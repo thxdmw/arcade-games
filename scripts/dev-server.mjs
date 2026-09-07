@@ -15,11 +15,12 @@ const mounts = [
 const mimeTypes = new Map([
   [".html", "text/html; charset=utf-8"], [".js", "text/javascript; charset=utf-8"],
   [".css", "text/css; charset=utf-8"], [".json", "application/json; charset=utf-8"],
-  [".svg", "image/svg+xml"], [".webp", "image/webp"], [".png", "image/png"],
+  [".svg", "image/svg+xml"], [".ico", "image/x-icon"], [".webp", "image/webp"], [".png", "image/png"],
   [".zip", "application/zip"], [".wasm", "application/wasm"], [".data", "application/octet-stream"]
 ]);
 
 function resolveRequestPath(pathname) {
+  if (pathname === "/favicon.ico") return join(projectRoot, "assets", "favicon.ico");
   const mount = mounts.find(([prefix]) => pathname.startsWith(prefix));
   const base = mount?.[1] ?? projectRoot;
   const relative = mount ? pathname.slice(mount[0].length) : pathname.slice(1);
@@ -40,6 +41,12 @@ const server = createServer((request, response) => {
   response.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
   response.setHeader("Cross-Origin-Resource-Policy", "same-origin");
   response.setHeader("Cache-Control", "no-store");
+
+  if (pathname === "/favicon.ico") {
+    response.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Cache-Control", "public, max-age=2592000");
+  }
 
   if (pathname === "/roms/") {
     // 与 nginx autoindex JSON 保持同一份最小契约，开发和部署无需两套清单。
