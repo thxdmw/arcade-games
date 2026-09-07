@@ -1,82 +1,79 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#0b0d10">
+    <meta name="theme-color" content="#f3f0e8">
     <meta name="description" content="纯前端、自托管的网页街机厅">
     <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="stylesheet" href="/assets/styles.css">
     <title>Arcade Vault · 网页街机厅</title>
   </head>
-  <body>
+  <body class="home-page">
     <div class="noise" aria-hidden="true"></div>
     <header class="site-header">
       <a class="brand" href="/" aria-label="返回 Arcade Vault 首页">
         <img src="/assets/logo.svg" alt="" width="44" height="44">
         <span><b>ARCADE</b><small>VAULT / 街机库</small></span>
       </a>
-      <div class="header-status" id="storage-status">
-        <span class="status-dot"></span>
-        <span>本地存档已启用</span>
+      <div class="header-actions">
+        <div class="header-status" id="storage-status">
+          <span class="status-dot"></span>
+          <span>本地存档已启用</span>
+        </div>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到暗色模式">
+          <span aria-hidden="true">☾</span><small>暗色</small>
+        </button>
       </div>
     </header>
 
-    <main>
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">INSERT COIN · PLAYER ONE</p>
-          <h1>你的街机厅，<br><em>就在浏览器里。</em></h1>
-          <p class="hero-description">拳皇与三国战纪由 FBNeo 在本机运行。没有账号，没有上传，进度留在当前浏览器。</p>
-          <div class="hero-actions">
-            <button class="primary-button" id="play-featured" type="button">开始游戏 <span>↗</span></button>
-            <a class="text-link" href="#library">浏览全部 <span>↓</span></a>
+    <main class="home-main">
+      <section class="arcade-layout">
+        <div class="machine-zone" aria-hidden="true">
+          <div class="hero-machine">
+            <div class="machine-top"><span>ARCADE VAULT</span></div>
+            <div class="machine-screen">
+              <div class="scanlines"></div>
+              <span class="screen-kicker">READY?</span>
+              <strong>FIGHT!</strong>
+              <small>PRESS START</small>
+            </div>
+            <div class="machine-controls"><i></i><b></b><b></b><b></b><b></b></div>
           </div>
         </div>
-        <div class="hero-machine" aria-hidden="true">
-          <div class="machine-top"><span>ARCADE VAULT</span></div>
-          <div class="machine-screen">
-            <div class="scanlines"></div>
-            <span class="screen-kicker">READY?</span>
-            <strong>FIGHT!</strong>
-            <small>PRESS START</small>
+
+        <section class="library" id="library">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">GAME LIBRARY</p>
+              <h1>选择游戏</h1>
+            </div>
+            <div class="library-count"><strong id="available-count">0</strong><span>台可运行</span></div>
           </div>
-          <div class="machine-controls"><i></i><b></b><b></b><b></b><b></b></div>
-        </div>
-      </section>
 
-      <section class="library" id="library">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">GAME LIBRARY</p>
-            <h2>选择一台机器</h2>
+          <div class="library-tools">
+            <div class="filter-list" id="filters" aria-label="游戏分类"></div>
+            <label class="search-box">
+              <span aria-hidden="true">⌕</span>
+              <span class="sr-only">搜索游戏</span>
+              <input id="search" type="search" placeholder="搜索游戏…" autocomplete="off">
+            </label>
           </div>
-          <div class="library-count"><strong id="available-count">0</strong><span>台可运行</span></div>
-        </div>
 
-        <div class="library-tools">
-          <div class="filter-list" id="filters" aria-label="游戏分类"></div>
-          <label class="search-box">
-            <span aria-hidden="true">⌕</span>
-            <span class="sr-only">搜索游戏</span>
-            <input id="search" type="search" placeholder="搜索游戏或系列…" autocomplete="off">
-          </label>
-        </div>
+          <div class="resource-notice" id="resource-notice" hidden>
+            <span>!</span>
+            <p><strong>还没有找到可运行的 ROM。</strong> 把游戏与 BIOS 放入映射目录后刷新页面。</p>
+            <button type="button" id="show-setup">查看目录</button>
+          </div>
 
-        <div class="resource-notice" id="resource-notice" hidden>
-          <span>!</span>
-          <p><strong>还没有找到可运行的 ROM。</strong> 把游戏与 BIOS 放入 Docker 映射目录后刷新页面。</p>
-          <button type="button" id="show-setup">查看目录</button>
-        </div>
+          <div class="game-grid" id="game-grid" aria-live="polite">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
 
-        <div class="game-grid" id="game-grid" aria-live="polite">
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-        </div>
-
-        <p class="empty-state" id="empty-state" hidden>没有符合当前筛选条件的游戏。</p>
+          <p class="empty-state" id="empty-state" hidden>ROM 目录中没有可显示的游戏。</p>
+        </section>
       </section>
 
       <section class="setup-panel" id="setup" hidden>
@@ -87,16 +84,10 @@
           <code>runtime/roms/</code><span>游戏 ROM 压缩包</span>
           <code>runtime/bios/</code><span>neogeo.zip / pgm.zip</span>
           <code>runtime/covers/</code><span>可选的游戏封面</span>
-          <code>config/games.json</code><span>文件名与父 ROM 配置</span>
         </div>
-        <p>资源只在浏览器中读取。请使用与 FBNeo 4.2.3 匹配且你有权使用的 romset。</p>
+        <p>ROM 会从目录自动识别，无需编辑清单。请使用与 FBNeo 4.2.3 匹配且你有权使用的 romset。</p>
       </section>
     </main>
-
-    <footer>
-      <span>ARCADE VAULT / LOCAL-FIRST</span>
-      <span>EmulatorJS + FBNeo · ROM 不随项目分发</span>
-    </footer>
 
     <script type="module" src="/assets/app.js"></script>
   </body>

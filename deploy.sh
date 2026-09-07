@@ -1,19 +1,15 @@
 #!/usr/bin/env bash
-# 服务器端部署脚本：构建纯静态街机厅镜像，并保留宿主机上的 ROM、BIOS 和清单。
+# 服务器端部署脚本：构建纯静态街机厅镜像，并保留宿主机上的 ROM、BIOS 和封面。
 set -eu
 
 IMAGE_NAME="arcade-games"
 CONTAINER_NAME="arcade-games-web"
-HOST_PORT="${ARCADE_HOST_PORT:-20002}"
+HOST_PORT="${ARCADE_HOST_PORT:-20001}"
 DATA_DIR="${ARCADE_DATA_DIR:-/app/arcade-games-data}"
 RELEASE_TAG="${DEPLOY_RELEASE_TAG:-latest}"
 
 echo "==> 准备资源目录 ${DATA_DIR}"
-sudo mkdir -p "${DATA_DIR}/roms" "${DATA_DIR}/bios" "${DATA_DIR}/covers" "${DATA_DIR}/config"
-if [ ! -f "${DATA_DIR}/config/games.json" ]; then
-    sudo cp ./config/games.json "${DATA_DIR}/config/games.json"
-    echo "==> 已创建默认游戏清单，请按实际 ROM 文件名编辑"
-fi
+sudo mkdir -p "${DATA_DIR}/roms" "${DATA_DIR}/bios" "${DATA_DIR}/covers"
 
 echo "==> 构建镜像 ${IMAGE_NAME}:${RELEASE_TAG}"
 sudo docker build -t "${IMAGE_NAME}:${RELEASE_TAG}" -t "${IMAGE_NAME}:latest" .
@@ -32,7 +28,6 @@ sudo docker run -d \
     -v "${DATA_DIR}/roms:/usr/share/nginx/html/roms:ro" \
     -v "${DATA_DIR}/bios:/usr/share/nginx/html/bios:ro" \
     -v "${DATA_DIR}/covers:/usr/share/nginx/html/covers:ro" \
-    -v "${DATA_DIR}/config:/usr/share/nginx/html/config:ro" \
     "${IMAGE_NAME}:latest"
 
 sudo docker image prune -f >/dev/null

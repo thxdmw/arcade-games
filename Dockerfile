@@ -12,7 +12,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY index.html play.html manifest.webmanifest /usr/share/nginx/html/
 COPY THIRD_PARTY_NOTICES.md /usr/share/nginx/html/
 COPY assets /usr/share/nginx/html/assets
-COPY config /usr/share/nginx/html/config
 COPY --from=emulator-assets /site/public/emulatorjs /usr/share/nginx/html/emulatorjs
 
 RUN mkdir -p /usr/share/nginx/html/roms /usr/share/nginx/html/bios /usr/share/nginx/html/covers

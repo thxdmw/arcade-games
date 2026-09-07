@@ -1,6 +1,7 @@
 import { getGameResourceUrls, loadCatalog, probeGameResources, stableNumericId } from "./catalog.js";
 import { createArcadeDefaultControls, installEmulatorKeyboardBridge } from "./controls.js";
 import { createSaveRepository } from "./storage.js";
+import { installThemeToggle } from "./theme.js";
 
 const elements = {
   shell: document.querySelector("#emulator-shell"),
@@ -53,14 +54,18 @@ function installEmulator(game, urls, repository, resumeState) {
   window.EJS_gameName = game.id;
   window.EJS_gameID = stableNumericId(game.id);
   window.EJS_gameUrl = urls.rom;
-  window.EJS_biosUrl = urls.bios ?? "";
-  window.EJS_gameParentUrl = urls.parentRom ?? "";
+  // FBNeo 需要按 romset 文件名查找 BIOS/父 ROM；保留 ZIP 比解压成散文件更可靠。
+  window.EJS_biosUrl = game.bios ?? "";
+  window.EJS_gameParentUrl = game.parentRom ?? "";
+  window.EJS_dontExtractBIOS = true;
   window.EJS_pathtodata = "/emulatorjs/data/";
   window.EJS_controlScheme = "arcade";
   window.EJS_defaultControls = createArcadeDefaultControls();
   window.EJS_language = "zh-CN";
   window.EJS_disableAutoLang = true;
   window.EJS_startOnLoaded = true;
+  // 4.2.3 的 FBNeo 首次启动部分街机 ROM 会停在黑屏，一次延迟软重置可正常进入主板启动画面。
+  window.EJS_softLoad = 1;
   window.EJS_threads = globalThis.crossOriginIsolated === true;
   window.EJS_color = game.accent;
   window.EJS_backgroundColor = "#050607";
@@ -153,4 +158,5 @@ window.addEventListener("beforeunload", () => {
   if (stateObjectUrl) URL.revokeObjectURL(stateObjectUrl);
 });
 
+installThemeToggle(document.querySelector("#theme-toggle"));
 init();

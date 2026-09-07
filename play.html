@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#050607">
+    <meta name="theme-color" content="#f3f0e8">
     <link rel="icon" href="/assets/logo.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/assets/styles.css">
     <title>正在装载 · Arcade Vault</title>
@@ -15,7 +15,12 @@
         <span id="game-platform">ARCADE</span>
         <strong id="game-title">正在装载游戏</strong>
       </div>
-      <button class="icon-button" id="fullscreen" type="button">全屏</button>
+      <div class="player-actions">
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到暗色模式">
+          <span aria-hidden="true">☾</span><small>暗色</small>
+        </button>
+        <button class="icon-button" id="fullscreen" type="button">全屏</button>
+      </div>
     </header>
 
     <main class="player-main">

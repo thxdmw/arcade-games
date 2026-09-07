@@ -1,5 +1,6 @@
 import { getGameResourceUrls, loadCatalog, probeGameResources } from "./catalog.js";
 import { createSaveRepository } from "./storage.js";
+import { installThemeToggle } from "./theme.js";
 
 const elements = {
   grid: document.querySelector("#game-grid"),
@@ -8,7 +9,6 @@ const elements = {
   availableCount: document.querySelector("#available-count"),
   notice: document.querySelector("#resource-notice"),
   empty: document.querySelector("#empty-state"),
-  featured: document.querySelector("#play-featured"),
   setup: document.querySelector("#setup"),
   storageStatus: document.querySelector("#storage-status")
 };
@@ -104,17 +104,8 @@ function renderFilters() {
 
 function updateSummary() {
   const readyGames = view.catalog.games.filter((game) => view.availability.get(game.id)?.ready);
-  const detectionComplete = view.availability.size === view.catalog.games.length;
   elements.availableCount.textContent = String(readyGames.length);
   elements.notice.hidden = readyGames.length > 0 || view.availability.size < view.catalog.games.length;
-
-  const featured = readyGames.find((game) => game.featured) ?? readyGames[0];
-  elements.featured.disabled = !featured && !detectionComplete;
-  elements.featured.onclick = featured ? () => navigateToGame(featured.id) : () => {
-    elements.setup.hidden = false;
-    elements.setup.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
-  if (!featured) elements.featured.textContent = detectionComplete ? "挂载游戏资源 ↘" : "正在检测资源…";
 }
 
 async function detectResources() {
@@ -129,7 +120,6 @@ async function detectResources() {
 function bindSetupPanel() {
   const show = () => {
     elements.setup.hidden = false;
-    elements.setup.scrollIntoView({ behavior: "smooth", block: "center" });
   };
   document.querySelector("#show-setup").addEventListener("click", show);
   document.querySelector("#close-setup").addEventListener("click", () => { elements.setup.hidden = true; });
@@ -161,4 +151,5 @@ elements.search.addEventListener("input", (event) => {
   renderGames();
 });
 bindSetupPanel();
+installThemeToggle(document.querySelector("#theme-toggle"));
 init();
