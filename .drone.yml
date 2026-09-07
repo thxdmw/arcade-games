@@ -16,6 +16,8 @@ steps:
 
   - name: deploy
     image: appleboy/drone-ssh
+    depends_on:
+      - verify
     settings:
       host:
         from_secret: ssh_host
