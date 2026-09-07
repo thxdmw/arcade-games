@@ -27,19 +27,35 @@ steps:
         from_secret: ssh_username
       password:
         from_secret: ssh_password
+
+      # SSH 建连最多等 15 秒
+      timeout: 15s
+
+      # SSH 连接成功以后，远程脚本最多跑 30 分钟
       command_timeout: 30m
+
       script:
         - set -eu
+        - echo "===== deploy start ====="
+        - whoami
+        - hostname
+        - date
         - sudo mkdir -p /app/arcade-games
         - |
           if [ ! -d "/app/arcade-games/.git" ]; then
             echo "首次部署：从 Gitee 克隆仓库"
-            sudo git clone --origin origin --branch master https://gitee.com/tang-haixin/arcade-games.git /app/arcade-games
+            sudo git clone --origin origin --branch master \
+              https://gitee.com/tang-haixin/arcade-games.git \
+              /app/arcade-games
           fi
         - cd /app/arcade-games
+        - echo "===== git fetch ====="
         - sudo git fetch --prune origin master
+        - echo "===== git checkout ${DRONE_COMMIT_SHA} ====="
         - sudo git checkout --force --detach ${DRONE_COMMIT_SHA}
+        - echo "===== deploy.sh ====="
         - sudo env DEPLOY_RELEASE_TAG=${DRONE_COMMIT_SHA} bash ./deploy.sh
+        - echo "===== deploy finished ====="
 
   - name: notify-pushplus
     image: curlimages/curl:8.12.1
