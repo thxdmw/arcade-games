@@ -33,6 +33,7 @@ steps:
         - sudo mkdir -p /app/arcade-games
         - |
           if [ ! -d "/app/arcade-games/.git" ]; then
+            echo "首次部署：从 Gitee 克隆仓库"
             sudo git clone --origin origin --branch master https://gitee.com/tang-haixin/arcade-games.git /app/arcade-games
           fi
         - cd /app/arcade-games
