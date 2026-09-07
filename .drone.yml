@@ -25,23 +25,18 @@ steps:
         from_secret: ssh_username
       password:
         from_secret: ssh_password
-      envs:
-        - ARCADE_REPOSITORY_URL
       command_timeout: 30m
       script:
         - set -eu
         - sudo mkdir -p /app/arcade-games
         - |
           if [ ! -d "/app/arcade-games/.git" ]; then
-            sudo git clone "${ARCADE_REPOSITORY_URL}" /app/arcade-games
+            sudo git clone --origin origin --branch master https://gitee.com/tang-haixin/arcade-games.git /app/arcade-games
           fi
         - cd /app/arcade-games
         - sudo git fetch --prune origin master
         - sudo git checkout --force --detach ${DRONE_COMMIT_SHA}
         - sudo env DEPLOY_RELEASE_TAG=${DRONE_COMMIT_SHA} bash ./deploy.sh
-    environment:
-      ARCADE_REPOSITORY_URL:
-        from_secret: arcade_repository_url
 
   - name: notify-pushplus
     image: curlimages/curl:8.12.1
