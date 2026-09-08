@@ -16,6 +16,8 @@ npm run prepare:emulator
 npm run dev
 ```
 
+`prepare:emulator` 不仅复制 FBNeo 核心，还会生成 npm 包中缺失的浏览器运行文件并修正嵌套 `runtime` URL 的压缩包写入路径；首次安装依赖或升级 EmulatorJS 后必须重新执行。
+
 终端会输出实际访问地址。默认是 `http://localhost:5173`；如果这个端口已被占用，会自动尝试 `5174`、`5175` 等后续端口。把资源放入以下目录后刷新首页：
 
 ```text

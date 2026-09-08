@@ -60,4 +60,5 @@ docker build -t arcade-games:test .
 - 页面展示的键位必须同步维护在 `assets/controls.js`；EmulatorJS 自带默认键位不是 WASD，并且用户保存过的自定义键位会优先于项目默认值。
 - EmulatorJS 4.2.3 只在模拟器内部容器监听键盘；`assets/controls.js` 的页面级桥接负责处理焦点落在侧栏或已关闭菜单按钮上的情况，并保证短按至少维持数帧，升级依赖时需回归这条路径。
 - EmulatorJS 4.2.3 默认解压 BIOS/父 ROM，但 FBNeo 按 ZIP romset 名称查找它们；游戏页必须保持 `EJS_dontExtractBIOS = true`，并把各游戏目录中的完整资源 URL 传给模拟器。
+- EmulatorJS 4.2.3 在 `dontExtractBIOS` 模式下会错误地用完整 URL 写入虚拟文件系统；`prepare-emulator.mjs` 会将其修补为 ZIP 文件名。升级依赖后如果上游逻辑变化，准备脚本必须明确失败，不能静默跳过。
 - 这个版本的 FBNeo Web 核心首次 `callMain` 后可能停在黑屏，`EJS_softLoad = 1` 用一次性延迟重置进入主板启动画面。
