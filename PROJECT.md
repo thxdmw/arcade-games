@@ -49,9 +49,11 @@ docker build -t arcade-games:test .
 ## 易错点
 
 - 直接双击 HTML 会被浏览器的模块与 WASM 安全策略拦截，必须经 HTTP 服务访问。
+- 本地 `5173` 被其它进程占用时开发服务器会自动顺延端口，访问地址以终端实际输出为准。
 - 开启 FBNeo 多线程需要 COOP/COEP 响应头；本项目的开发服务器和 nginx 已配置，反向代理不能把这些头删掉。
 - Hack/克隆版经常依赖父 ROM，`parentRom` 只是额外传给核心，父、子压缩包都必须与当前 FBNeo romset 版本匹配。
 - nginx 的 `/runtime/` JSON 目录索引是自动发现入口；外层代理不得拦截或改写其各级目录请求。
+- `deploy.sh` 默认挂载 `/app/arcade-games/arcade-games-data`；Docker Compose 默认挂载仓库 `runtime`，服务器使用 Compose 时必须通过 `ARCADE_DATA_DIR` 指向实际上传目录。
 - 每个游戏目录的 `roms/`、`bios/`、`parents/` 都至多放一个 ZIP；只有主 ROM 放在 `roms/`，否则无法可靠判断资源角色。
 - EmulatorJS 调试模式会跳过已经写入 IndexedDB 的 ROM 缓存；不得重新启用 `EJS_DEBUG_XX`。
 - 浏览器隐私模式、清理站点数据或更换域名会让本地存档不可见；重要存档应在模拟器菜单中导出备份。

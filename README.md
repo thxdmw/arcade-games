@@ -16,7 +16,7 @@ npm run prepare:emulator
 npm run dev
 ```
 
-打开 `http://localhost:5173`。把资源放入以下目录后刷新首页：
+终端会输出实际访问地址。默认是 `http://localhost:5173`；如果这个端口已被占用，会自动尝试 `5174`、`5175` 等后续端口。把资源放入以下目录后刷新首页：
 
 ```text
 runtime/
@@ -40,13 +40,15 @@ runtime/
 
 ## Docker 部署
 
-`docker-compose.yml` 会把整个 `runtime/` 只读映射到 nginx：
+`docker-compose.yml` 默认把整个 `runtime/` 只读映射到 nginx，也可以通过 `ARCADE_DATA_DIR` 指定服务器资源目录：
 
 ```bash
 docker compose up --build -d
+# 在服务器已有独立资源目录时：
+ARCADE_DATA_DIR=/app/arcade-games/arcade-games-data docker compose up --build -d
 ```
 
-默认访问 `http://localhost:20002`。也可以参考同级 `game` 项目直接运行：
+默认访问 `http://localhost:20001`。也可以使用带自动校验的部署脚本：
 
 ```bash
 ARCADE_HOST_PORT=20002 ARCADE_DATA_DIR=/app/arcade-games/arcade-games-data bash ./deploy.sh
@@ -66,7 +68,16 @@ ARCADE_HOST_PORT=20002 ARCADE_DATA_DIR=/app/arcade-games/arcade-games-data bash 
     └── covers/
 ```
 
-部署脚本不会覆盖服务器已经维护的游戏资源。复制新的 ZIP 后刷新首页即可；如果沿用相同文件名替换 ROM，建议同时强制刷新浏览器缓存。
+部署脚本不会覆盖服务器已经维护的游戏资源。它会确认宿主机目录、Docker 实际挂载源和容器内 `/runtime/` JSON 接口一致，任一环节不正确都会停止并给出错误。复制新的 ZIP 后刷新首页即可；如果沿用相同文件名替换 ROM，建议同时强制刷新浏览器缓存。
+
+如果页面仍显示 `/runtime/` 404，先在服务器执行：
+
+```bash
+curl -i http://127.0.0.1:20001/runtime/
+sudo docker inspect arcade-games-web --format '{{json .Mounts}}'
+```
+
+第一条应返回 `200` 和游戏目录 JSON，第二条的 `Source` 应为 `/app/arcade-games/arcade-games-data`。如果本机端口返回 200、公开域名却返回 404，说明最外层反向代理没有把 `/runtime/` 转发给 `arcade-games-web`，需要让它和首页走同一个上游。
 
 `.drone.yml` 延续参考项目的“校验后 SSH 部署”流程。首次使用前需配置 `ssh_host`、`ssh_port`、`ssh_username`、`ssh_password` 和 `pushplus_token` 五个 Drone Secret，其中仓库克隆地址已固化在流水线配置中，无需额外配置。
 

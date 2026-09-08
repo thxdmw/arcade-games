@@ -2,6 +2,7 @@ import { createReadStream, existsSync, readdirSync, statSync } from "node:fs";
 import { createServer } from "node:http";
 import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { listenWithFallback } from "./listen-with-fallback.mjs";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const port = Number.parseInt(process.env.ARCADE_DEV_PORT || "5173", 10);
@@ -63,6 +64,14 @@ const server = createServer((request, response) => {
   else createReadStream(filePath).pipe(response);
 });
 
-server.listen(port, "0.0.0.0", () => {
-  console.log(`Arcade Vault 已启动：http://localhost:${port}`);
-});
+try {
+  const actualPort = await listenWithFallback(server, port, {
+    onRetry: (occupiedPort, nextPort) => {
+      console.warn(`端口 ${occupiedPort} 已被占用，自动尝试 ${nextPort}`);
+    }
+  });
+  console.log(`Arcade Vault 已启动：http://localhost:${actualPort}`);
+} catch (error) {
+  console.error(`开发服务器启动失败：${error.message}`);
+  process.exitCode = 1;
+}
