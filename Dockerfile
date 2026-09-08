@@ -3,7 +3,7 @@ FROM node:22-alpine AS emulator-assets
 WORKDIR /site
 COPY package.json package-lock.json ./
 RUN npm ci --omit=optional
-COPY scripts/prepare-emulator.mjs scripts/prepare-emulator.mjs
+COPY scripts/prepare-emulator.mjs scripts/emulator-assets.mjs scripts/
 RUN npm run prepare:emulator
 
 FROM nginx:stable-alpine
