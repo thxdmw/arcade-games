@@ -48,13 +48,13 @@ docker compose up --build -d
 默认访问 `http://localhost:20002`。也可以参考同级 `game` 项目直接运行：
 
 ```bash
-ARCADE_HOST_PORT=20002 ARCADE_DATA_DIR=/app/arcade-games-data bash ./deploy.sh
+ARCADE_HOST_PORT=20002 ARCADE_DATA_DIR=/app/arcade-games/arcade-games-data bash ./deploy.sh
 ```
 
 服务器数据目录结构：
 
 ```text
-/app/arcade-games-data/
+/app/arcade-games/arcade-games-data/
 ├── roms/
 ├── bios/
 └── covers/

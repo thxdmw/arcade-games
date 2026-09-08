@@ -5,7 +5,7 @@ set -eu
 IMAGE_NAME="arcade-games"
 CONTAINER_NAME="arcade-games-web"
 HOST_PORT="${ARCADE_HOST_PORT:-20001}"
-DATA_DIR="${ARCADE_DATA_DIR:-/app/arcade-games-data}"
+DATA_DIR="${ARCADE_DATA_DIR:-/app/arcade-games/arcade-games-data}"
 RELEASE_TAG="${DEPLOY_RELEASE_TAG:-latest}"
 
 echo "==> 准备资源目录 ${DATA_DIR}"
