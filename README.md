@@ -62,7 +62,7 @@ ARCADE_HOST_PORT=20002 ARCADE_DATA_DIR=/app/arcade-games/arcade-games-data bash 
 
 部署脚本不会覆盖服务器已经维护的游戏资源。复制新的 ZIP 后刷新首页即可；如果沿用相同文件名替换 ROM，建议同时强制刷新浏览器缓存。
 
-`.drone.yml` 延续参考项目的“校验后 SSH 部署”流程。首次使用前需配置 `ssh_host`、`ssh_port`、`ssh_username`、`ssh_password` 和 `arcade_repository_url` 五个 Drone Secret。
+`.drone.yml` 延续参考项目的“校验后 SSH 部署”流程。首次使用前需配置 `ssh_host`、`ssh_port`、`ssh_username`、`ssh_password` 和 `pushplus_token` 五个 Drone Secret，其中仓库克隆地址已固化在流水线配置中，无需额外配置。
 
 ## 存档说明
 
