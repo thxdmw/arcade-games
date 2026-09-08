@@ -1,10 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { catalogFromDirectory, getGameResourceUrls, normalizeCatalog, probeGameResources, resolveResourcePath, stableNumericId } from "../assets/catalog.js";
+import { catalogFromRuntime, getGameResourceUrls, normalizeCatalog, probeGameResources, stableNumericId } from "../assets/catalog.js";
 
 const rawCatalog = {
   version: 1,
-  resources: { roms: "/roms", bios: "/bios/", covers: "/covers/" },
   games: [
     {
       id: "kof10th",
@@ -15,24 +14,34 @@ const rawCatalog = {
       rom: "kof10th.zip",
       parentRom: "kof2002.zip",
       bios: "neogeo.zip",
-      cover: "拳皇 10.webp"
+      cover: "cover.png",
+      resourceUrls: {
+        rom: "/runtime/%E6%8B%B3%E7%9A%87%E5%8D%81%E5%91%A8%E5%B9%B4/roms/kof10th.zip",
+        parentRom: "/runtime/%E6%8B%B3%E7%9A%87%E5%8D%81%E5%91%A8%E5%B9%B4/parents/kof2002.zip",
+        bios: "/runtime/%E6%8B%B3%E7%9A%87%E5%8D%81%E5%91%A8%E5%B9%B4/bios/neogeo.zip",
+        cover: "/runtime/%E6%8B%B3%E7%9A%87%E5%8D%81%E5%91%A8%E5%B9%B4/covers/cover.png"
+      }
     }
   ]
 };
 
-test("规范化清单并生成经过编码的站内资源路径", () => {
+test("规范化清单并保留独立的 runtime 资源路径", () => {
   const catalog = normalizeCatalog(rawCatalog);
-  const urls = getGameResourceUrls(catalog.games[0], catalog.resources);
-  assert.equal(catalog.resources.roms, "/roms/");
-  assert.equal(urls.rom, "/roms/kof10th.zip");
-  assert.equal(urls.parentRom, "/roms/kof2002.zip");
-  assert.equal(urls.cover, "/covers/%E6%8B%B3%E7%9A%87%2010.webp");
+  const urls = getGameResourceUrls(catalog.games[0]);
+  assert.equal(urls.rom, rawCatalog.games[0].resourceUrls.rom);
+  assert.equal(urls.parentRom, rawCatalog.games[0].resourceUrls.parentRom);
+  assert.equal(urls.cover, rawCatalog.games[0].resourceUrls.cover);
 });
 
-test("拒绝远程地址与目录跳转", () => {
-  assert.throws(() => resolveResourcePath("/roms/", "../secret.zip"), /不安全/);
-  assert.throws(() => resolveResourcePath("/roms/", "https://example.com/game.zip"), /不安全/);
-  assert.throws(() => normalizeCatalog({ ...rawCatalog, resources: { roms: "https://example.com/" } }), /站点内/);
+test("拒绝 runtime 之外的资源地址与目录跳转", () => {
+  assert.throws(() => normalizeCatalog({
+    ...rawCatalog,
+    games: [{ ...rawCatalog.games[0], resourceUrls: { ...rawCatalog.games[0].resourceUrls, rom: "https://example.com/game.zip" } }]
+  }), /runtime/);
+  assert.throws(() => normalizeCatalog({
+    ...rawCatalog,
+    games: [{ ...rawCatalog.games[0], resourceUrls: { ...rawCatalog.games[0].resourceUrls, rom: "/runtime/../secret.zip" } }]
+  }), /runtime/);
 });
 
 test("拒绝重复游戏 ID", () => {
@@ -46,7 +55,7 @@ test("资源探测会报告 ROM、BIOS 和父 ROM 中的缺失项", async () => 
     calls.push([url, options.method]);
     return { ok: !url.endsWith("kof2002.zip") };
   };
-  const result = await probeGameResources(catalog.games[0], catalog.resources, fakeFetch);
+  const result = await probeGameResources(catalog.games[0], fakeFetch);
   assert.equal(result.ready, false);
   assert.deepEqual(result.missing.map((item) => item.label), ["父 ROM"]);
   assert.equal(calls.length, 3);
@@ -59,24 +68,32 @@ test("相同游戏 ID 始终得到相同的正整数命名空间", () => {
   assert.ok(stableNumericId("kof97") >= 0);
 });
 
-test("从目录索引识别两个预置游戏并隐藏父 ROM", () => {
-  const catalog = catalogFromDirectory([
-    { name: "kof10th.zip", type: "file" },
-    { name: "kof2002.zip", type: "file" },
-    { name: "kovplusq.zip", type: "file" },
-    { name: "kovplus.zip", type: "file" },
-    { name: "readme.txt", type: "file" }
+test("runtime 游戏文件夹名用于展示并独立加载 ROM、父包、BIOS 和封面", async () => {
+  const gameName = "三国战纪风云再起";
+  const gameUrl = `/runtime/${encodeURIComponent(gameName)}/`;
+  const directories = new Map([
+    ["/runtime/", [{ name: gameName, type: "directory" }]],
+    [gameUrl, ["roms", "parents", "bios", "covers"].map((name) => ({ name, type: "directory" }))],
+    [`${gameUrl}roms/`, [{ name: "kovplusq.zip", type: "file" }]],
+    [`${gameUrl}parents/`, [{ name: "kovplus.zip", type: "file" }]],
+    [`${gameUrl}bios/`, [{ name: "pgm.zip", type: "file" }]],
+    [`${gameUrl}covers/`, [{ name: "cover.png", type: "file" }]]
   ]);
-  assert.deepEqual(catalog.games.map((game) => game.id), ["kof10th", "kovplusq"]);
-  assert.equal(catalog.games[0].parentRom, "kof2002.zip");
-  assert.equal(catalog.games[1].bios, "pgm.zip");
-  assert.equal(catalog.games[1].parentRom, "kovplus.zip");
-});
+  const fetchImpl = async (url) => ({
+    ok: directories.has(url),
+    status: directories.has(url) ? 200 : 404,
+    json: async () => directories.get(url)
+  });
 
-test("未收录的 ROM 使用文件名并按常见前缀推断平台", () => {
-  const catalog = catalogFromDirectory(["kof99hack.zip", "cps-demo.zip"]);
-  assert.equal(catalog.games[0].bios, "neogeo.zip");
-  assert.equal(catalog.games[0].platform, "Neo Geo");
-  assert.equal(catalog.games[1].bios, null);
-  assert.equal(catalog.games[1].title, "cps-demo");
+  const catalog = await catalogFromRuntime("/runtime/", fetchImpl);
+  const game = catalog.games[0];
+  assert.equal(game.title, gameName);
+  assert.equal(game.id, "kovplusq");
+  assert.equal(game.series, "三国战纪");
+  assert.deepEqual(getGameResourceUrls(game), {
+    rom: `${gameUrl}roms/kovplusq.zip`,
+    bios: `${gameUrl}bios/pgm.zip`,
+    parentRom: `${gameUrl}parents/kovplus.zip`,
+    cover: `${gameUrl}covers/cover.png`
+  });
 });

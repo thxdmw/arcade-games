@@ -7,6 +7,4 @@ services:
     ports:
       - "${ARCADE_HOST_PORT:-20001}:80"
     volumes:
-      - ./runtime/roms:/usr/share/nginx/html/roms:ro
-      - ./runtime/bios:/usr/share/nginx/html/bios:ro
-      - ./runtime/covers:/usr/share/nginx/html/covers:ro
+      - ./runtime:/usr/share/nginx/html/runtime:ro

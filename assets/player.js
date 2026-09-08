@@ -1,5 +1,6 @@
 import { getGameResourceUrls, loadCatalog, probeGameResources, stableNumericId } from "./catalog.js";
 import { createArcadeDefaultControls, installEmulatorKeyboardBridge } from "./controls.js";
+import { configureEmulatorResourceCache, requestPersistentBrowserStorage } from "./resource-cache.js";
 import { createSaveRepository } from "./storage.js";
 import { installThemeToggle } from "./theme.js";
 
@@ -49,14 +50,15 @@ function chooseResume(state) {
 }
 
 function installEmulator(game, urls, repository, resumeState) {
+  configureEmulatorResourceCache(window);
   window.EJS_player = "#game";
   window.EJS_core = game.core;
   window.EJS_gameName = game.id;
   window.EJS_gameID = stableNumericId(game.id);
   window.EJS_gameUrl = urls.rom;
   // FBNeo 需要按 romset 文件名查找 BIOS/父 ROM；保留 ZIP 比解压成散文件更可靠。
-  window.EJS_biosUrl = game.bios ?? "";
-  window.EJS_gameParentUrl = game.parentRom ?? "";
+  window.EJS_biosUrl = urls.bios ?? "";
+  window.EJS_gameParentUrl = urls.parentRom ?? "";
   window.EJS_dontExtractBIOS = true;
   window.EJS_pathtodata = "/emulatorjs/data/";
   window.EJS_controlScheme = "arcade";
@@ -69,7 +71,6 @@ function installEmulator(game, urls, repository, resumeState) {
   window.EJS_threads = globalThis.crossOriginIsolated === true;
   window.EJS_color = game.accent;
   window.EJS_backgroundColor = "#050607";
-  window.EJS_DEBUG_XX = true;
   window.EJS_defaultOptions = {
     "retroarch_core": "fbneo",
     "save-state-location": "browser",
@@ -114,6 +115,7 @@ async function init() {
   }
 
   try {
+    await requestPersistentBrowserStorage();
     const [catalog, repository] = await Promise.all([loadCatalog(), createSaveRepository()]);
     const game = catalog.games.find((item) => item.id === gameId);
     if (!game) {
@@ -126,7 +128,7 @@ async function init() {
     elements.platform.textContent = `${game.platform} / ${game.core.toUpperCase()}`;
     elements.bootTitle.textContent = `正在装载 ${game.title}`;
 
-    const status = await probeGameResources(game, catalog.resources);
+    const status = await probeGameResources(game);
     if (!status.ready) {
       const missing = status.missing.map((item) => `${item.label}：${item.url}`).join("；");
       showError("游戏资源不完整", `请检查 Docker 映射目录。缺少 ${missing}`);
@@ -135,8 +137,8 @@ async function init() {
 
     const selectedState = await chooseResume(await repository.getLatestState(game.id));
     elements.bootTitle.textContent = `正在启动 ${game.title}`;
-    elements.bootMessage.textContent = "首次装载 FBNeo 核心需要几秒钟，请保持当前页面。";
-    installEmulator(game, getGameResourceUrls(game, catalog.resources), repository, selectedState);
+    elements.bootMessage.textContent = "首次装载会下载并缓存游戏资源，之后启动将优先读取本机缓存。";
+    installEmulator(game, getGameResourceUrls(game), repository, selectedState);
   } catch (error) {
     console.error(error);
     showError("启动失败", error.message || "发生未知错误，请查看浏览器控制台。");

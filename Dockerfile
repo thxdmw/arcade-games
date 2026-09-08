@@ -14,6 +14,6 @@ COPY THIRD_PARTY_NOTICES.md /usr/share/nginx/html/
 COPY assets /usr/share/nginx/html/assets
 COPY --from=emulator-assets /site/public/emulatorjs /usr/share/nginx/html/emulatorjs
 
-RUN mkdir -p /usr/share/nginx/html/roms /usr/share/nginx/html/bios /usr/share/nginx/html/covers
+RUN mkdir -p /usr/share/nginx/html/runtime
 
 EXPOSE 80

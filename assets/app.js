@@ -45,7 +45,7 @@ function createGameCard(game, visibleIndex) {
   card.dataset.index = String(visibleIndex + 1).padStart(2, "0");
   card.style.setProperty("--game-accent", game.accent);
 
-  const urls = getGameResourceUrls(game, view.catalog.resources);
+  const urls = getGameResourceUrls(game);
   const cover = createElement("div", "game-cover");
   if (urls.cover) cover.style.backgroundImage = `url("${urls.cover}")`;
 
@@ -110,7 +110,7 @@ function updateSummary() {
 
 async function detectResources() {
   await Promise.all(view.catalog.games.map(async (game) => {
-    const status = await probeGameResources(game, view.catalog.resources);
+    const status = await probeGameResources(game);
     view.availability.set(game.id, status);
     renderGames();
     updateSummary();

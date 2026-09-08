@@ -9,7 +9,7 @@ DATA_DIR="${ARCADE_DATA_DIR:-/app/arcade-games/arcade-games-data}"
 RELEASE_TAG="${DEPLOY_RELEASE_TAG:-latest}"
 
 echo "==> 准备资源目录 ${DATA_DIR}"
-sudo mkdir -p "${DATA_DIR}/roms" "${DATA_DIR}/bios" "${DATA_DIR}/covers"
+sudo mkdir -p "${DATA_DIR}"
 
 echo "==> 构建镜像 ${IMAGE_NAME}:${RELEASE_TAG}"
 sudo docker build -t "${IMAGE_NAME}:${RELEASE_TAG}" -t "${IMAGE_NAME}:latest" .
@@ -25,9 +25,7 @@ sudo docker run -d \
     --name "${CONTAINER_NAME}" \
     --restart unless-stopped \
     -p "${HOST_PORT}:80" \
-    -v "${DATA_DIR}/roms:/usr/share/nginx/html/roms:ro" \
-    -v "${DATA_DIR}/bios:/usr/share/nginx/html/bios:ro" \
-    -v "${DATA_DIR}/covers:/usr/share/nginx/html/covers:ro" \
+    -v "${DATA_DIR}:/usr/share/nginx/html/runtime:ro" \
     "${IMAGE_NAME}:latest"
 
 sudo docker image prune -f >/dev/null

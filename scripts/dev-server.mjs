@@ -5,11 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const port = Number.parseInt(process.env.ARCADE_DEV_PORT || "5173", 10);
-const romDirectory = join(projectRoot, "runtime", "roms");
 const mounts = [
-  ["/roms/", romDirectory],
-  ["/bios/", join(projectRoot, "runtime", "bios")],
-  ["/covers/", join(projectRoot, "runtime", "covers")],
   ["/emulatorjs/", join(projectRoot, "public", "emulatorjs")]
 ];
 const mimeTypes = new Map([
@@ -28,13 +24,6 @@ function resolveRequestPath(pathname) {
   return filePath === base || filePath.startsWith(`${base}${sep}`) ? filePath : null;
 }
 
-function resolveFlatArchive(pathname) {
-  const match = pathname.match(/^\/([^/]+\.zip)$/i);
-  if (!match) return null;
-  const candidates = [join(projectRoot, "runtime", "bios", match[1]), join(projectRoot, "runtime", "roms", match[1])];
-  return candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile()) ?? null;
-}
-
 const server = createServer((request, response) => {
   const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname);
   response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
@@ -48,18 +37,15 @@ const server = createServer((request, response) => {
     response.setHeader("Cache-Control", "public, max-age=2592000");
   }
 
-  if (pathname === "/roms/") {
-    // 与 nginx autoindex JSON 保持同一份最小契约，开发和部署无需两套清单。
-    const entries = readdirSync(romDirectory, { withFileTypes: true })
-      .filter((entry) => entry.isFile())
-      .map((entry) => ({ name: entry.name, type: "file" }));
+  let filePath = resolveRequestPath(pathname);
+  if (pathname.startsWith("/runtime/") && filePath && existsSync(filePath) && statSync(filePath).isDirectory()) {
+    const entries = readdirSync(filePath, { withFileTypes: true })
+      .map((entry) => ({ name: entry.name, type: entry.isDirectory() ? "directory" : "file" }));
     const payload = JSON.stringify(entries);
     response.writeHead(200, { "Content-Type": "application/json; charset=utf-8", "Content-Length": Buffer.byteLength(payload) });
     response.end(request.method === "HEAD" ? undefined : payload);
     return;
   }
-
-  let filePath = resolveFlatArchive(pathname) ?? resolveRequestPath(pathname);
   if (filePath && existsSync(filePath) && statSync(filePath).isDirectory()) filePath = join(filePath, "index.html");
 
   if (!filePath || !existsSync(filePath) || !statSync(filePath).isFile()) {

@@ -6,13 +6,7 @@ node_modules/
 public/emulatorjs/
 .tmp-emulator-inspect/
 
-# 游戏版权资源只允许本地或服务器挂载
-runtime/roms/*
-!runtime/roms/.gitkeep
-runtime/bios/*
-!runtime/bios/.gitkeep
-runtime/covers/*
-!runtime/covers/.gitkeep
+# runtime 内的游戏版权资源由 runtime/.gitignore 统一排除。
 
 # 日志与本地配置
 *.log

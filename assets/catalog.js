@@ -1,42 +1,7 @@
-const DEFAULT_RESOURCES = Object.freeze({
-  roms: "/roms/",
-  bios: "/bios/",
-  covers: "/covers/"
-});
-
-const KNOWN_GAMES = Object.freeze([
-  Object.freeze({
-    id: "kof10th",
-    title: "拳皇十周年",
-    series: "拳皇",
-    genre: "格斗",
-    platform: "Neo Geo · Hack",
-    core: "fbneo",
-    rom: "kof10th.zip",
-    parentRom: "kof2002.zip",
-    bios: "neogeo.zip",
-    year: 2005,
-    accent: "#6857ff",
-    featured: true,
-    description: "基于拳皇 2002 的十周年修改版，支持本地存档与浏览器手柄。"
-  }),
-  Object.freeze({
-    id: "kovplusq",
-    title: "三国战纪·集气快",
-    series: "三国战纪",
-    genre: "动作过关",
-    platform: "IGS PGM · Hack",
-    core: "fbneo",
-    rom: "kovplusq.zip",
-    parentRom: "kovplus.zip",
-    bios: "pgm.zip",
-    year: 2021,
-    accent: "#ff6948",
-    description: "FBNeo 中的群英新传 V120 修改版，适合多人横版闯关。"
-  })
-]);
-
 const GAME_ID_PATTERN = /^[a-z0-9][a-z0-9_-]{1,63}$/;
+const RUNTIME_ROOT = "/runtime/";
+const RESERVED_RUNTIME_DIRECTORIES = new Set(["bios", "covers", "parents", "roms"]);
+const COVER_PATTERN = /\.(png|webp|jpe?g)$/i;
 
 function requireText(value, field) {
   if (typeof value !== "string" || value.trim() === "") {
@@ -45,22 +10,12 @@ function requireText(value, field) {
   return value.trim();
 }
 
-function normalizeBasePath(value, fallback, field) {
-  const candidate = typeof value === "string" && value.trim() ? value.trim() : fallback;
-  if (!candidate.startsWith("/") || candidate.includes("..") || candidate.includes(":")) {
-    throw new TypeError(`资源目录 ${field} 必须是站点内绝对路径`);
+function normalizeRuntimeUrl(value, field) {
+  if (typeof value !== "string") return null;
+  if (!value.startsWith(RUNTIME_ROOT) || value.includes("..") || value.includes("\\") || /[:?#]/.test(value)) {
+    throw new TypeError(`游戏资源 ${field} 不是安全的 runtime 路径`);
   }
-  return candidate.endsWith("/") ? candidate : `${candidate}/`;
-}
-
-export function resolveResourcePath(basePath, fileName) {
-  const file = requireText(fileName, "资源文件名");
-  if (file.startsWith("/") || file.includes("..") || file.includes("\\") || /[:?#]/.test(file)) {
-    throw new TypeError(`不安全的资源路径: ${file}`);
-  }
-
-  const encodedFile = file.split("/").map((part) => encodeURIComponent(part)).join("/");
-  return `${basePath}${encodedFile}`;
+  return value;
 }
 
 function normalizeGame(game, index) {
@@ -72,6 +27,13 @@ function normalizeGame(game, index) {
   if (!GAME_ID_PATTERN.test(id)) {
     throw new TypeError(`游戏 ID 只能包含小写字母、数字、下划线和连字符: ${id}`);
   }
+
+  const resourceUrls = game.resourceUrls ? Object.freeze({
+    rom: normalizeRuntimeUrl(game.resourceUrls.rom, `${id}.romUrl`),
+    bios: normalizeRuntimeUrl(game.resourceUrls.bios, `${id}.biosUrl`),
+    parentRom: normalizeRuntimeUrl(game.resourceUrls.parentRom, `${id}.parentRomUrl`),
+    cover: normalizeRuntimeUrl(game.resourceUrls.cover, `${id}.coverUrl`)
+  }) : null;
 
   return Object.freeze({
     id,
@@ -88,7 +50,8 @@ function normalizeGame(game, index) {
     description: typeof game.description === "string" ? game.description.trim() : "",
     accent: /^#[0-9a-f]{6}$/i.test(game.accent) ? game.accent : "#f1ff3f",
     featured: game.featured === true,
-    enabled: game.enabled !== false
+    enabled: game.enabled !== false,
+    resourceUrls
   });
 }
 
@@ -97,11 +60,6 @@ export function normalizeCatalog(raw) {
     throw new TypeError("游戏数据必须包含 games 数组");
   }
 
-  const resources = Object.freeze({
-    roms: normalizeBasePath(raw.resources?.roms, DEFAULT_RESOURCES.roms, "roms"),
-    bios: normalizeBasePath(raw.resources?.bios, DEFAULT_RESOURCES.bios, "bios"),
-    covers: normalizeBasePath(raw.resources?.covers, DEFAULT_RESOURCES.covers, "covers")
-  });
   const ids = new Set();
   const games = raw.games.map(normalizeGame).filter((game) => game.enabled);
   for (const game of games) {
@@ -109,76 +67,120 @@ export function normalizeCatalog(raw) {
     ids.add(game.id);
   }
 
-  return Object.freeze({ version: Number(raw.version) || 1, resources, games: Object.freeze(games) });
+  return Object.freeze({ version: Number(raw.version) || 1, games: Object.freeze(games) });
 }
 
-function discoveredFileName(entry) {
-  const value = typeof entry === "string" ? entry : entry?.name;
-  if (typeof value !== "string" || !/\.zip$/i.test(value)) return null;
-  if (value.includes("/") || value.includes("\\") || value.includes("..")) return null;
-  return value;
+function safeDirectoryName(entry) {
+  const name = typeof entry?.name === "string" ? entry.name.trim() : "";
+  if (entry?.type !== "directory" || !name || name.startsWith(".") || name.includes("/") || name.includes("\\") || name.includes("..")) return null;
+  return name;
 }
 
-function unknownGame(fileName) {
-  const stem = fileName.replace(/\.zip$/i, "");
-  const normalizedStem = stem.toLowerCase();
-  const isNeoGeo = normalizedStem.startsWith("kof");
-  const isPgm = normalizedStem.startsWith("kov");
-  const safeStem = normalizedStem.replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+function safeFileName(entry, pattern) {
+  const name = typeof entry?.name === "string" ? entry.name.trim() : "";
+  if (entry?.type !== "file" || !pattern.test(name) || name.includes("/") || name.includes("\\") || name.includes("..")) return null;
+  return name;
+}
+
+function childDirectoryUrl(parentUrl, name) {
+  return `${parentUrl}${encodeURIComponent(name)}/`;
+}
+
+function childFileUrl(parentUrl, name) {
+  return `${parentUrl}${encodeURIComponent(name)}`;
+}
+
+async function readDirectory(url, fetchImpl, optional = false) {
+  const response = await fetchImpl(url, { cache: "no-store", credentials: "same-origin" });
+  if (optional && response.status === 404) return [];
+  if (!response.ok) throw new Error(`ROM 目录读取失败 (${response.status})`);
+  const entries = await response.json();
+  if (!Array.isArray(entries)) throw new TypeError(`目录 ${url} 没有返回文件列表`);
+  return entries;
+}
+
+function singleZip(entries, label, required = false) {
+  const files = entries.map((entry) => safeFileName(entry, /\.zip$/i)).filter(Boolean);
+  if (files.length > 1) throw new Error(`${label} 只能放一个 ZIP，当前找到：${files.join("、")}`);
+  if (required && files.length === 0) throw new Error(`${label} 缺少主游戏 ZIP`);
+  return files[0] ?? null;
+}
+
+function chooseCover(entries, gameName, romName) {
+  const files = entries.map((entry) => safeFileName(entry, COVER_PATTERN)).filter(Boolean);
+  const preferredStems = [gameName.toLocaleLowerCase("zh-CN"), romName.replace(/\.zip$/i, "").toLowerCase(), "cover"];
+  return preferredStems.map((stem) => files.find((file) => file.replace(/\.[^.]+$/, "").toLocaleLowerCase("zh-CN") === stem)).find(Boolean) ?? files[0] ?? null;
+}
+
+function runtimeGameId(romName) {
+  const id = romName.replace(/\.zip$/i, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+  if (!GAME_ID_PATTERN.test(id)) throw new Error(`主游戏 ZIP 必须使用 FBNeo 英文短名称：${romName}`);
+  return id;
+}
+
+function gamePresentation(gameName, id) {
+  if (gameName.includes("拳皇") || id.startsWith("kof")) return { series: "拳皇", genre: "格斗", accent: "#6857ff" };
+  if (gameName.includes("三国战纪") || id.startsWith("kov")) return { series: "三国战纪", genre: "动作过关", accent: "#ff6948" };
+  return { series: "其它街机", genre: "街机", accent: "#2f7cff" };
+}
+
+async function scanRuntimeGame(rootUrl, gameName, fetchImpl) {
+  const gameUrl = childDirectoryUrl(rootUrl, gameName);
+  const gameEntries = await readDirectory(gameUrl, fetchImpl);
+  const directories = new Map(gameEntries.map((entry) => [safeDirectoryName(entry), entry]).filter(([name]) => name));
+  if (!directories.has("roms")) throw new Error(`${gameName} 缺少 roms 目录`);
+
+  const romsUrl = childDirectoryUrl(gameUrl, "roms");
+  const rom = singleZip(await readDirectory(romsUrl, fetchImpl), `${gameName}/roms`, true);
+  const id = runtimeGameId(rom);
+
+  const parentsUrl = childDirectoryUrl(gameUrl, "parents");
+  const parentRom = directories.has("parents") ? singleZip(await readDirectory(parentsUrl, fetchImpl), `${gameName}/parents`) : null;
+  const localBiosUrl = childDirectoryUrl(gameUrl, "bios");
+  const localBios = directories.has("bios") ? singleZip(await readDirectory(localBiosUrl, fetchImpl), `${gameName}/bios`) : null;
+  const coversUrl = childDirectoryUrl(gameUrl, "covers");
+  const cover = directories.has("covers") ? chooseCover(await readDirectory(coversUrl, fetchImpl), gameName, rom) : null;
+  const presentation = gamePresentation(gameName, id);
+
   return {
-    id: safeStem.length >= 2 ? safeStem : `rom-${safeStem || "game"}`,
-    title: stem,
-    series: isNeoGeo ? "拳皇" : isPgm ? "三国战纪" : "未分类",
-    genre: isNeoGeo ? "格斗" : isPgm ? "动作过关" : "街机",
-    platform: isNeoGeo ? "Neo Geo" : isPgm ? "IGS PGM" : "FBNeo",
+    id,
+    title: gameName,
+    series: presentation.series,
+    genre: presentation.genre,
+    platform: "FBNeo",
     core: "fbneo",
-    rom: fileName,
-    bios: isNeoGeo ? "neogeo.zip" : isPgm ? "pgm.zip" : null,
-    description: "已从 ROM 目录自动发现；未收录的游戏请以实际运行结果确认 BIOS 与父 ROM。",
-    accent: "#2f7cff"
+    rom,
+    bios: localBios,
+    parentRom,
+    cover,
+    description: `主游戏资源：${rom}${parentRom ? `；父 ROM：${parentRom}` : ""}`,
+    accent: presentation.accent,
+    resourceUrls: {
+      rom: childFileUrl(romsUrl, rom),
+      bios: localBios ? childFileUrl(localBiosUrl, localBios) : null,
+      parentRom: parentRom ? childFileUrl(parentsUrl, parentRom) : null,
+      cover: cover ? childFileUrl(coversUrl, cover) : null
+    }
   };
 }
 
-export function catalogFromDirectory(entries) {
-  if (!Array.isArray(entries)) throw new TypeError("ROM 目录索引必须是数组");
-  const files = new Map();
-  for (const entry of entries) {
-    const name = discoveredFileName(entry);
-    if (name) files.set(name.toLowerCase(), name);
-  }
+export async function catalogFromRuntime(rootUrl = RUNTIME_ROOT, fetchImpl = fetch) {
+  const normalizedRoot = rootUrl.endsWith("/") ? rootUrl : `${rootUrl}/`;
+  const rootEntries = await readDirectory(normalizedRoot, fetchImpl, true);
+  const gameNames = rootEntries.map(safeDirectoryName).filter((name) => name && !RESERVED_RUNTIME_DIRECTORIES.has(name.toLowerCase()));
+  const games = [];
+  for (const gameName of gameNames) games.push(await scanRuntimeGame(normalizedRoot, gameName, fetchImpl));
 
-  const knownRomNames = new Set(KNOWN_GAMES.map((game) => game.rom.toLowerCase()));
-  // 父 ROM 是运行依赖，不应该在大厅里重复显示成另一款游戏。
-  const dependencyNames = new Set(KNOWN_GAMES.flatMap((game) => game.parentRom ? [game.parentRom.toLowerCase()] : []));
-  const games = KNOWN_GAMES
-    .filter((game) => files.has(game.rom.toLowerCase()))
-    .map((game) => ({
-      ...game,
-      rom: files.get(game.rom.toLowerCase()),
-      parentRom: game.parentRom ? files.get(game.parentRom.toLowerCase()) ?? game.parentRom : null
-    }));
-
-  for (const [lowerName, actualName] of files) {
-    if (knownRomNames.has(lowerName) || dependencyNames.has(lowerName)) continue;
-    games.push(unknownGame(actualName));
-  }
-
-  return normalizeCatalog({ version: 2, resources: DEFAULT_RESOURCES, games });
+  return normalizeCatalog({ version: 3, games });
 }
 
-export async function loadCatalog(url = "/roms/", fetchImpl = fetch) {
-  const response = await fetchImpl(url, { cache: "no-store", credentials: "same-origin" });
-  if (!response.ok) throw new Error(`ROM 目录读取失败 (${response.status})`);
-  return catalogFromDirectory(await response.json());
+export async function loadCatalog(url = RUNTIME_ROOT, fetchImpl = fetch) {
+  return catalogFromRuntime(url, fetchImpl);
 }
 
-export function getGameResourceUrls(game, resources) {
-  return Object.freeze({
-    rom: resolveResourcePath(resources.roms, game.rom),
-    bios: game.bios ? resolveResourcePath(resources.bios, game.bios) : null,
-    parentRom: game.parentRom ? resolveResourcePath(resources.roms, game.parentRom) : null,
-    cover: game.cover ? resolveResourcePath(resources.covers, game.cover) : null
-  });
+export function getGameResourceUrls(game) {
+  if (!game.resourceUrls) throw new TypeError(`游戏 ${game.id} 缺少 runtime 资源路径`);
+  return game.resourceUrls;
 }
 
 async function resourceExists(url, fetchImpl) {
@@ -194,8 +196,8 @@ async function resourceExists(url, fetchImpl) {
   }
 }
 
-export async function probeGameResources(game, resources, fetchImpl = fetch) {
-  const urls = getGameResourceUrls(game, resources);
+export async function probeGameResources(game, fetchImpl = fetch) {
+  const urls = getGameResourceUrls(game);
   const required = [
     ["ROM", urls.rom],
     ...(urls.bios ? [["BIOS", urls.bios]] : []),
