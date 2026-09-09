@@ -8,23 +8,33 @@
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="manifest" href="/manifest.webmanifest">
     <link rel="stylesheet" href="/assets/styles.css">
-    <title>Arcade Vault · 网页街机厅</title>
+    <title>方方街机</title>
   </head>
   <body class="home-page">
     <div class="noise" aria-hidden="true"></div>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="返回 Arcade Vault 首页">
-        <img src="/assets/logo.svg" alt="" width="44" height="44">
-        <span><b>ARCADE</b><small>VAULT / 街机库</small></span>
+      <a class="brand" href="/" aria-label="返回方方街机首页">
+        <img src="/assets/favicon.ico" alt="" width="44" height="44">
+        <span><b>方方街机</b></span>
       </a>
-      <div class="header-actions">
-        <div class="header-status" id="storage-status">
-          <span class="status-dot"></span>
-          <span>本地存档已启用</span>
+      <div class="header-library" aria-label="游戏库工具栏">
+        <div class="filter-list" id="filters" aria-label="游戏分类"></div>
+        <div class="header-tools">
+          <label class="search-box">
+            <span aria-hidden="true">⌕</span>
+            <span class="sr-only">搜索游戏</span>
+            <input id="search" type="search" placeholder="搜索游戏…" autocomplete="off">
+          </label>
+          <button class="refresh-games" id="refresh-games" type="button"><span aria-hidden="true">↻</span> 刷新</button>
+          <span class="catalog-status" id="catalog-status"><i class="status-dot"></i>自动发现已开启</span>
+          <div class="header-status" id="storage-status">
+            <span class="status-dot"></span>
+            <span>本地存档已启用</span>
+          </div>
+          <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到暗色模式">
+            <span aria-hidden="true">☾</span><small>暗色</small>
+          </button>
         </div>
-        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到暗色模式">
-          <span aria-hidden="true">☾</span><small>暗色</small>
-        </button>
       </div>
     </header>
 
@@ -37,49 +47,28 @@
             <small>将鼠标移到游戏卡片上即可预览</small>
           </div>
 
-          <div class="hero-machine" aria-hidden="true">
-            <div class="machine-top"><span>ARCADE VAULT</span></div>
-            <div class="machine-screen" id="machine-screen">
+          <section class="hero-machine interactive-machine" id="interactive-machine" tabindex="0" aria-label="街机选台，使用左右方向键换游戏，按回车开始">
+            <div class="machine-top"><span>方方街机</span></div>
+            <button class="machine-screen" id="machine-screen" type="button" aria-label="开始当前游戏" disabled>
+              <span class="machine-screen-cover" id="machine-screen-cover" aria-hidden="true"></span>
               <div class="scanlines"></div>
               <span class="screen-kicker" id="machine-screen-kicker">READY?</span>
               <strong id="machine-screen-title">FIGHT!</strong>
               <small id="machine-screen-prompt">CHOOSE YOUR GAME</small>
-            </div>
-            <div class="machine-controls"><i></i><b></b><b></b><b></b><b></b></div>
-          </div>
-
-          <div class="machine-dock">
-            <button class="random-game" id="random-game" type="button">
-              <span aria-hidden="true">↝</span>
-              <b>随机选一款</b>
-              <small>帮我从当前列表挑选</small>
             </button>
-            <div class="machine-dock-lights" aria-hidden="true"><i></i><i></i><i></i></div>
-          </div>
+            <div class="machine-controls" aria-label="街机控制台">
+              <div class="joystick-navigation">
+                <button id="machine-previous" type="button" aria-label="上一款游戏">‹</button>
+                <span class="joystick" aria-hidden="true"></span>
+                <button id="machine-next" type="button" aria-label="下一款游戏">›</button>
+              </div>
+              <button class="machine-action machine-random" id="machine-random" type="button" aria-label="随机选择游戏">?</button>
+              <button class="machine-action machine-start" id="machine-start" type="button" disabled>开始</button>
+            </div>
+          </section>
         </div>
 
         <section class="library" id="library">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">GAME LIBRARY</p>
-              <h1>选择游戏</h1>
-            </div>
-            <div class="library-count"><strong id="available-count">0</strong><span>台可运行</span></div>
-          </div>
-
-          <div class="library-tools">
-            <div class="filter-list" id="filters" aria-label="游戏分类"></div>
-            <div class="catalog-actions">
-              <span class="catalog-status" id="catalog-status">自动发现已开启</span>
-              <button class="refresh-games" id="refresh-games" type="button"><span aria-hidden="true">↻</span> 刷新</button>
-              <label class="search-box">
-                <span aria-hidden="true">⌕</span>
-                <span class="sr-only">搜索游戏</span>
-                <input id="search" type="search" placeholder="搜索游戏…" autocomplete="off">
-              </label>
-            </div>
-          </div>
-
           <div class="resource-notice" id="resource-notice" hidden>
             <span>!</span>
             <p><strong>还没有找到可运行的 ROM。</strong> 上传完整游戏目录后，页面会自动发现，也可以点击刷新。</p>
