@@ -7,7 +7,7 @@ const rawCatalog = {
   games: [
     {
       id: "kof10th",
-      title: "拳皇十周年",
+      title: "拳皇十周年_修改版",
       series: "拳皇",
       genre: "格斗",
       platform: "Neo Geo",
@@ -92,7 +92,7 @@ test("runtime 游戏文件夹名用于展示并独立加载 ROM、父包、BIOS 
   const game = catalog.games[0];
   assert.equal(game.title, gameName);
   assert.equal(game.id, "kovplusq");
-  assert.equal(game.series, "三国战纪");
+  assert.equal(game.series, "三国战纪_v117_正版");
   assert.deepEqual(getGameResourceUrls(game), {
     rom: `${gameUrl}roms/kovplusq.zip`,
     bios: `${gameUrl}bios/pgm.zip`,

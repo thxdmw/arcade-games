@@ -126,7 +126,7 @@ function runtimeGameId(romName) {
 
 function gamePresentation(gameName, id) {
   if (gameName.includes("拳皇") || id.startsWith("kof")) return { series: "拳皇", genre: "格斗", accent: "#6857ff" };
-  if (gameName.includes("三国战纪") || id.startsWith("kov")) return { series: "三国战纪", genre: "动作过关", accent: "#ff6948" };
+  if (gameName.includes("三国战纪_v117_正版") || id.startsWith("kov")) return { series: "三国战纪_v117_正版", genre: "动作过关", accent: "#ff6948" };
   return { series: "其它街机", genre: "街机", accent: "#2f7cff" };
 }
 
