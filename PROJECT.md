@@ -18,6 +18,7 @@ Arcade Vault 是一个纯前端网页街机厅。浏览器通过 EmulatorJS 4.2.
 | 位置 | 职责 |
 | --- | --- |
 | `index.html`、`assets/app.js` | 游戏大厅、筛选、资源可用性检测 |
+| `assets/game-presentation.js` | 卡片版本标签与左侧街机屏幕预览文本 |
 | `play.html`、`assets/player.js` | 模拟器装载、继续游戏、运行状态提示 |
 | `assets/catalog.js` | 独立游戏目录发现、资源角色校验与安全 URL 生成 |
 | `assets/theme.js` | 默认亮色、暗亮切换与本地偏好保存 |

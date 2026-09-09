@@ -1,5 +1,6 @@
 import { gameFromRuntime, getGameResourceUrls, listRuntimeGameNames, loadCatalog, normalizeCatalog } from "./catalog.js";
 import { readCatalogCache, writeCatalogCache } from "./catalog-cache.js";
+import { gameEditionLabel, machinePreviewTitle } from "./game-presentation.js";
 import { createSaveRepository } from "./storage.js";
 import { installThemeToggle } from "./theme.js";
 
@@ -13,7 +14,13 @@ const elements = {
   setup: document.querySelector("#setup"),
   storageStatus: document.querySelector("#storage-status"),
   refresh: document.querySelector("#refresh-games"),
-  catalogStatus: document.querySelector("#catalog-status")
+  catalogStatus: document.querySelector("#catalog-status"),
+  machineCount: document.querySelector("#machine-game-count"),
+  machineScreen: document.querySelector("#machine-screen"),
+  machineKicker: document.querySelector("#machine-screen-kicker"),
+  machineTitle: document.querySelector("#machine-screen-title"),
+  machinePrompt: document.querySelector("#machine-screen-prompt"),
+  randomGame: document.querySelector("#random-game")
 };
 
 const view = {
@@ -42,11 +49,26 @@ function availabilityLabel(status) {
   return { className: "missing", text: `缺少 ${status.missing.map((item) => item.label).join(" / ")}` };
 }
 
+function resetMachinePreview() {
+  elements.machineScreen.classList.remove("is-preview");
+  elements.machineKicker.textContent = "READY?";
+  elements.machineTitle.textContent = "FIGHT!";
+  elements.machinePrompt.textContent = "CHOOSE YOUR GAME";
+}
+
+function previewGame(game) {
+  elements.machineScreen.classList.add("is-preview");
+  elements.machineKicker.textContent = game.series;
+  elements.machineTitle.textContent = machinePreviewTitle(game.title);
+  elements.machinePrompt.textContent = game.id.toUpperCase();
+}
+
 function createGameCard(game, visibleIndex) {
   const status = view.availability.get(game.id);
   const label = availabilityLabel(status);
   const card = createElement("article", "game-card");
   card.dataset.index = String(visibleIndex + 1).padStart(2, "0");
+  card.dataset.gameId = game.id;
   card.style.setProperty("--game-accent", game.accent);
 
   const urls = getGameResourceUrls(game);
@@ -63,7 +85,7 @@ function createGameCard(game, visibleIndex) {
   const title = createElement("h3", "", game.title);
   const description = createElement("p", "", game.description);
   const footer = createElement("div", "game-card-footer");
-  footer.append(createElement("span", "", `${game.series} · ${game.genre}`));
+  footer.append(createElement("span", "game-edition", gameEditionLabel(game)));
   const button = createElement("button", "play-button", "▶");
   button.type = "button";
   button.disabled = !status?.ready;
@@ -72,6 +94,12 @@ function createGameCard(game, visibleIndex) {
   footer.append(button);
   body.append(meta, title, description, footer);
   card.append(cover, body);
+  card.addEventListener("mouseenter", () => previewGame(game));
+  card.addEventListener("mouseleave", resetMachinePreview);
+  card.addEventListener("focusin", () => previewGame(game));
+  card.addEventListener("focusout", (event) => {
+    if (!card.contains(event.relatedTarget)) resetMachinePreview();
+  });
   return card;
 }
 
@@ -109,7 +137,20 @@ function renderFilters() {
 function updateSummary() {
   const readyGames = view.catalog.games.filter((game) => view.availability.get(game.id)?.ready);
   elements.availableCount.textContent = String(readyGames.length);
+  elements.machineCount.textContent = String(readyGames.length);
   elements.notice.hidden = readyGames.length > 0 || view.availability.size < view.catalog.games.length;
+}
+
+function selectRandomGame() {
+  const games = filteredGames().filter((game) => view.availability.get(game.id)?.ready);
+  if (!games.length) return;
+  const game = games[Math.floor(Math.random() * games.length)];
+  previewGame(game);
+  const card = elements.grid.querySelector(`[data-game-id="${CSS.escape(game.id)}"]`);
+  if (!card) return;
+  card.classList.add("is-random-pick");
+  card.scrollIntoView({ behavior: "smooth", block: "center" });
+  window.setTimeout(() => card.classList.remove("is-random-pick"), 1800);
 }
 
 function applyCatalog(catalog) {
@@ -189,6 +230,7 @@ elements.search.addEventListener("input", (event) => {
 });
 bindSetupPanel();
 elements.refresh.addEventListener("click", () => syncRuntimeCatalog(true));
+elements.randomGame.addEventListener("click", selectRandomGame);
 window.setInterval(() => {
   if (document.visibilityState === "visible") syncRuntimeCatalog();
 }, 15000);

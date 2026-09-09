@@ -30,16 +30,31 @@
 
     <main class="home-main">
       <section class="arcade-layout">
-        <div class="machine-zone" aria-hidden="true">
-          <div class="hero-machine">
+        <div class="machine-zone">
+          <div class="machine-status">
+            <span><i></i> LIVE COLLECTION</span>
+            <strong><b id="machine-game-count">0</b> 款游戏在线</strong>
+            <small>将鼠标移到游戏卡片上即可预览</small>
+          </div>
+
+          <div class="hero-machine" aria-hidden="true">
             <div class="machine-top"><span>ARCADE VAULT</span></div>
-            <div class="machine-screen">
+            <div class="machine-screen" id="machine-screen">
               <div class="scanlines"></div>
-              <span class="screen-kicker">READY?</span>
-              <strong>FIGHT!</strong>
-              <small>PRESS START</small>
+              <span class="screen-kicker" id="machine-screen-kicker">READY?</span>
+              <strong id="machine-screen-title">FIGHT!</strong>
+              <small id="machine-screen-prompt">CHOOSE YOUR GAME</small>
             </div>
             <div class="machine-controls"><i></i><b></b><b></b><b></b><b></b></div>
+          </div>
+
+          <div class="machine-dock">
+            <button class="random-game" id="random-game" type="button">
+              <span aria-hidden="true">↝</span>
+              <b>随机选一款</b>
+              <small>帮我从当前列表挑选</small>
+            </button>
+            <div class="machine-dock-lights" aria-hidden="true"><i></i><i></i><i></i></div>
           </div>
         </div>
 
