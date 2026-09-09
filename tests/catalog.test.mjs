@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { catalogFromRuntime, getGameResourceUrls, normalizeCatalog, probeGameResources, stableNumericId } from "../assets/catalog.js";
+import { catalogFromRuntime, gameFromRuntime, getGameResourceUrls, listRuntimeGameNames, normalizeCatalog, probeGameResources, stableNumericId } from "../assets/catalog.js";
 
 const rawCatalog = {
   version: 1,
@@ -79,11 +79,14 @@ test("runtime 游戏文件夹名用于展示并独立加载 ROM、父包、BIOS 
     [`${gameUrl}bios/`, [{ name: "pgm.zip", type: "file" }]],
     [`${gameUrl}covers/`, [{ name: "cover.png", type: "file" }]]
   ]);
-  const fetchImpl = async (url) => ({
-    ok: directories.has(url),
-    status: directories.has(url) ? 200 : 404,
-    json: async () => directories.get(url)
-  });
+  const fetchImpl = async (url) => {
+    const cleanUrl = url.split("?")[0];
+    return {
+      ok: directories.has(cleanUrl),
+      status: directories.has(cleanUrl) ? 200 : 404,
+      json: async () => directories.get(cleanUrl)
+    };
+  };
 
   const catalog = await catalogFromRuntime("/runtime/", fetchImpl);
   const game = catalog.games[0];
@@ -96,4 +99,32 @@ test("runtime 游戏文件夹名用于展示并独立加载 ROM、父包、BIOS 
     parentRom: `${gameUrl}parents/kovplus.zip`,
     cover: `${gameUrl}covers/cover.png`
   });
+});
+
+test("根目录检查绕过缓存且单个游戏可以独立扫描", async () => {
+  const gameName = "拳皇97";
+  const gameUrl = `/runtime/${encodeURIComponent(gameName)}/`;
+  const directories = new Map([
+    ["/runtime/", [{ name: gameName, type: "directory" }]],
+    [gameUrl, [{ name: "roms", type: "directory" }]],
+    [`${gameUrl}roms/`, [{ name: "kof97.zip", type: "file" }]]
+  ]);
+  const requests = [];
+  const fetchImpl = async (url) => {
+    requests.push(url);
+    const cleanUrl = url.split("?")[0];
+    return {
+      ok: directories.has(cleanUrl),
+      status: directories.has(cleanUrl) ? 200 : 404,
+      json: async () => directories.get(cleanUrl)
+    };
+  };
+
+  assert.deepEqual(await listRuntimeGameNames("/runtime/", fetchImpl), [gameName]);
+  assert.match(requests[0], /^\/runtime\/\?_=/);
+  requests.length = 0;
+  const game = await gameFromRuntime(gameName, "/runtime/", fetchImpl);
+  assert.equal(game.id, "kof97");
+  assert.equal(game.runtimeFolder, gameName);
+  assert.equal(requests.includes("/runtime/"), false);
 });

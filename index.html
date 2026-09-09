@@ -54,16 +54,20 @@
 
           <div class="library-tools">
             <div class="filter-list" id="filters" aria-label="游戏分类"></div>
-            <label class="search-box">
-              <span aria-hidden="true">⌕</span>
-              <span class="sr-only">搜索游戏</span>
-              <input id="search" type="search" placeholder="搜索游戏…" autocomplete="off">
-            </label>
+            <div class="catalog-actions">
+              <span class="catalog-status" id="catalog-status">自动发现已开启</span>
+              <button class="refresh-games" id="refresh-games" type="button"><span aria-hidden="true">↻</span> 刷新</button>
+              <label class="search-box">
+                <span aria-hidden="true">⌕</span>
+                <span class="sr-only">搜索游戏</span>
+                <input id="search" type="search" placeholder="搜索游戏…" autocomplete="off">
+              </label>
+            </div>
           </div>
 
           <div class="resource-notice" id="resource-notice" hidden>
             <span>!</span>
-            <p><strong>还没有找到可运行的 ROM。</strong> 把游戏与 BIOS 放入映射目录后刷新页面。</p>
+            <p><strong>还没有找到可运行的 ROM。</strong> 上传完整游戏目录后，页面会自动发现，也可以点击刷新。</p>
             <button type="button" id="show-setup">查看目录</button>
           </div>
 

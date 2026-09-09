@@ -38,6 +38,7 @@ function normalizeGame(game, index) {
   return Object.freeze({
     id,
     title: requireText(game.title, `${id}.title`),
+    runtimeFolder: requireText(game.runtimeFolder ?? game.title, `${id}.runtimeFolder`),
     series: requireText(game.series, `${id}.series`),
     genre: requireText(game.genre, `${id}.genre`),
     platform: requireText(game.platform, `${id}.platform`),
@@ -90,8 +91,13 @@ function childFileUrl(parentUrl, name) {
   return `${parentUrl}${encodeURIComponent(name)}`;
 }
 
-async function readDirectory(url, fetchImpl, optional = false) {
-  const response = await fetchImpl(url, { cache: "no-store", credentials: "same-origin" });
+async function readDirectory(url, fetchImpl, optional = false, cacheBust = false) {
+  const requestUrl = cacheBust ? `${url}${url.includes("?") ? "&" : "?"}_=${Date.now().toString(36)}` : url;
+  const response = await fetchImpl(requestUrl, {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { Accept: "application/json", "Cache-Control": "no-cache" }
+  });
   if (optional && response.status === 404) return [];
   if (!response.ok) throw new Error(`ROM 目录读取失败 (${response.status})`);
   const entries = await response.json();
@@ -131,20 +137,26 @@ async function scanRuntimeGame(rootUrl, gameName, fetchImpl) {
   if (!directories.has("roms")) throw new Error(`${gameName} 缺少 roms 目录`);
 
   const romsUrl = childDirectoryUrl(gameUrl, "roms");
-  const rom = singleZip(await readDirectory(romsUrl, fetchImpl), `${gameName}/roms`, true);
-  const id = runtimeGameId(rom);
-
   const parentsUrl = childDirectoryUrl(gameUrl, "parents");
-  const parentRom = directories.has("parents") ? singleZip(await readDirectory(parentsUrl, fetchImpl), `${gameName}/parents`) : null;
   const localBiosUrl = childDirectoryUrl(gameUrl, "bios");
-  const localBios = directories.has("bios") ? singleZip(await readDirectory(localBiosUrl, fetchImpl), `${gameName}/bios`) : null;
   const coversUrl = childDirectoryUrl(gameUrl, "covers");
-  const cover = directories.has("covers") ? chooseCover(await readDirectory(coversUrl, fetchImpl), gameName, rom) : null;
+  const [romEntries, parentEntries, biosEntries, coverEntries] = await Promise.all([
+    readDirectory(romsUrl, fetchImpl),
+    directories.has("parents") ? readDirectory(parentsUrl, fetchImpl) : [],
+    directories.has("bios") ? readDirectory(localBiosUrl, fetchImpl) : [],
+    directories.has("covers") ? readDirectory(coversUrl, fetchImpl) : []
+  ]);
+  const rom = singleZip(romEntries, `${gameName}/roms`, true);
+  const id = runtimeGameId(rom);
+  const parentRom = singleZip(parentEntries, `${gameName}/parents`);
+  const localBios = singleZip(biosEntries, `${gameName}/bios`);
+  const cover = chooseCover(coverEntries, gameName, rom);
   const presentation = gamePresentation(gameName, id);
 
   return {
     id,
     title: gameName,
+    runtimeFolder: gameName,
     series: presentation.series,
     genre: presentation.genre,
     platform: "FBNeo",
@@ -164,14 +176,26 @@ async function scanRuntimeGame(rootUrl, gameName, fetchImpl) {
   };
 }
 
-export async function catalogFromRuntime(rootUrl = RUNTIME_ROOT, fetchImpl = fetch) {
+export async function listRuntimeGameNames(rootUrl = RUNTIME_ROOT, fetchImpl = fetch) {
   const normalizedRoot = rootUrl.endsWith("/") ? rootUrl : `${rootUrl}/`;
-  const rootEntries = await readDirectory(normalizedRoot, fetchImpl, true);
-  const gameNames = rootEntries.map(safeDirectoryName).filter((name) => name && !RESERVED_RUNTIME_DIRECTORIES.has(name.toLowerCase()));
-  const games = [];
-  for (const gameName of gameNames) games.push(await scanRuntimeGame(normalizedRoot, gameName, fetchImpl));
+  const rootEntries = await readDirectory(normalizedRoot, fetchImpl, true, true);
+  return rootEntries.map(safeDirectoryName).filter((name) => name && !RESERVED_RUNTIME_DIRECTORIES.has(name.toLowerCase()));
+}
 
-  return normalizeCatalog({ version: 3, games });
+export async function gameFromRuntime(gameName, rootUrl = RUNTIME_ROOT, fetchImpl = fetch) {
+  const normalizedName = safeDirectoryName({ name: gameName, type: "directory" });
+  if (!normalizedName) throw new TypeError("游戏目录名称无效");
+  const normalizedRoot = rootUrl.endsWith("/") ? rootUrl : `${rootUrl}/`;
+  return normalizeCatalog({ version: 4, games: [await scanRuntimeGame(normalizedRoot, normalizedName, fetchImpl)] }).games[0];
+}
+
+export async function catalogFromRuntime(rootUrl = RUNTIME_ROOT, fetchImpl = fetch) {
+  const gameNames = await listRuntimeGameNames(rootUrl, fetchImpl);
+  const results = await Promise.allSettled(gameNames.map((gameName) => gameFromRuntime(gameName, rootUrl, fetchImpl)));
+  const games = results.filter((result) => result.status === "fulfilled").map((result) => result.value);
+  if (gameNames.length > 0 && games.length === 0) throw results[0].reason;
+
+  return normalizeCatalog({ version: 4, games });
 }
 
 export async function loadCatalog(url = RUNTIME_ROOT, fetchImpl = fetch) {

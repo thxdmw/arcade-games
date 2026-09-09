@@ -53,6 +53,8 @@ docker build -t arcade-games:test .
 - 开启 FBNeo 多线程需要 COOP/COEP 响应头；本项目的开发服务器和 nginx 已配置，反向代理不能把这些头删掉。
 - Hack/克隆版经常依赖父 ROM，`parentRom` 只是额外传给核心，父、子压缩包都必须与当前 FBNeo romset 版本匹配。
 - nginx 的 `/runtime/` JSON 目录索引是自动发现入口；外层代理不得拦截或改写其各级目录请求。
+- 大厅清单保存在 localStorage，首扫按游戏并行；之后只轮询根目录并增量扫描新增项。游戏页应复用缓存或通过 `folder` 参数只扫描目标目录，不能重新扫描整个 runtime。
+- Docker bind mount 能立即看到挂载目录内部的变化，但看不到宿主机将挂载根目录整体删除后重建；上传资源只能修改根目录内部内容。
 - `deploy.sh` 默认挂载 `/app/arcade-games/arcade-games-data`；Docker Compose 默认挂载仓库 `runtime`，服务器使用 Compose 时必须通过 `ARCADE_DATA_DIR` 指向实际上传目录。
 - 每个游戏目录的 `roms/`、`bios/`、`parents/` 都至多放一个 ZIP；只有主 ROM 放在 `roms/`，否则无法可靠判断资源角色。
 - EmulatorJS 调试模式会跳过已经写入 IndexedDB 的 ROM 缓存；不得重新启用 `EJS_DEBUG_XX`。

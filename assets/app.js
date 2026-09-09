@@ -1,4 +1,5 @@
-import { getGameResourceUrls, loadCatalog, probeGameResources } from "./catalog.js";
+import { gameFromRuntime, getGameResourceUrls, listRuntimeGameNames, loadCatalog, normalizeCatalog } from "./catalog.js";
+import { readCatalogCache, writeCatalogCache } from "./catalog-cache.js";
 import { createSaveRepository } from "./storage.js";
 import { installThemeToggle } from "./theme.js";
 
@@ -10,7 +11,9 @@ const elements = {
   notice: document.querySelector("#resource-notice"),
   empty: document.querySelector("#empty-state"),
   setup: document.querySelector("#setup"),
-  storageStatus: document.querySelector("#storage-status")
+  storageStatus: document.querySelector("#storage-status"),
+  refresh: document.querySelector("#refresh-games"),
+  catalogStatus: document.querySelector("#catalog-status")
 };
 
 const view = {
@@ -18,7 +21,8 @@ const view = {
   availability: new Map(),
   filter: "全部",
   query: "",
-  recentIds: []
+  recentIds: [],
+  refreshing: false
 };
 
 function createElement(tagName, className, text) {
@@ -28,8 +32,8 @@ function createElement(tagName, className, text) {
   return element;
 }
 
-function navigateToGame(gameId) {
-  window.location.href = `/play.html?id=${encodeURIComponent(gameId)}`;
+function navigateToGame(game) {
+  window.location.href = `/play.html?id=${encodeURIComponent(game.id)}&folder=${encodeURIComponent(game.runtimeFolder)}`;
 }
 
 function availabilityLabel(status) {
@@ -64,7 +68,7 @@ function createGameCard(game, visibleIndex) {
   button.type = "button";
   button.disabled = !status?.ready;
   button.setAttribute("aria-label", status?.ready ? `运行${game.title}` : `${game.title}资源不完整`);
-  button.addEventListener("click", () => navigateToGame(game.id));
+  button.addEventListener("click", () => navigateToGame(game));
   footer.append(button);
   body.append(meta, title, description, footer);
   card.append(cover, body);
@@ -108,13 +112,44 @@ function updateSummary() {
   elements.notice.hidden = readyGames.length > 0 || view.availability.size < view.catalog.games.length;
 }
 
-async function detectResources() {
-  await Promise.all(view.catalog.games.map(async (game) => {
-    const status = await probeGameResources(game);
-    view.availability.set(game.id, status);
-    renderGames();
-    updateSummary();
-  }));
+function applyCatalog(catalog) {
+  view.catalog = catalog;
+  view.availability = new Map(catalog.games.map((game) => [game.id, { ready: true, missing: [] }]));
+  writeCatalogCache(catalog);
+  renderFilters();
+  renderGames();
+  updateSummary();
+}
+
+function setRefreshState(refreshing, message) {
+  view.refreshing = refreshing;
+  elements.refresh.disabled = refreshing;
+  elements.refresh.classList.toggle("is-loading", refreshing);
+  elements.catalogStatus.textContent = message;
+}
+
+async function syncRuntimeCatalog(force = false) {
+  if (view.refreshing) return;
+  setRefreshState(true, force ? "正在重新扫描…" : "正在检查新游戏…");
+  try {
+    if (force || !view.catalog) {
+      applyCatalog(await loadCatalog());
+    } else {
+      const gameNames = await listRuntimeGameNames();
+      const existing = new Map(view.catalog.games.map((game) => [game.runtimeFolder, game]));
+      const addedNames = gameNames.filter((name) => !existing.has(name));
+      const addedResults = await Promise.allSettled(addedNames.map((name) => gameFromRuntime(name)));
+      const addedGames = addedResults.filter((result) => result.status === "fulfilled").map((result) => result.value);
+      const games = gameNames.map((name) => existing.get(name) ?? addedGames.find((game) => game.runtimeFolder === name)).filter(Boolean);
+      if (games.length !== view.catalog.games.length || addedGames.length > 0) {
+        applyCatalog(normalizeCatalog({ version: 4, games }));
+      }
+    }
+    setRefreshState(false, "自动发现已开启");
+  } catch (error) {
+    console.error(error);
+    setRefreshState(false, `检查失败：${error.message}`);
+  }
 }
 
 function bindSetupPanel() {
@@ -127,8 +162,11 @@ function bindSetupPanel() {
 
 async function init() {
   try {
-    const [catalog, repository] = await Promise.all([loadCatalog(), createSaveRepository()]);
-    view.catalog = catalog;
+    const cachedCatalog = readCatalogCache();
+    const repositoryPromise = createSaveRepository();
+    if (cachedCatalog) applyCatalog(cachedCatalog);
+    else applyCatalog(await loadCatalog());
+    const repository = await repositoryPromise;
     view.recentIds = (await repository.getRecent()).map((entry) => entry.gameId);
     if (!repository.persistent) {
       elements.storageStatus.lastElementChild.textContent = "本地持久存储不可用";
@@ -136,8 +174,7 @@ async function init() {
     }
     renderFilters();
     renderGames();
-    updateSummary();
-    await detectResources();
+    if (cachedCatalog) await syncRuntimeCatalog();
   } catch (error) {
     console.error(error);
     elements.grid.replaceChildren();
@@ -151,5 +188,12 @@ elements.search.addEventListener("input", (event) => {
   renderGames();
 });
 bindSetupPanel();
+elements.refresh.addEventListener("click", () => syncRuntimeCatalog(true));
+window.setInterval(() => {
+  if (document.visibilityState === "visible") syncRuntimeCatalog();
+}, 15000);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") syncRuntimeCatalog();
+});
 installThemeToggle(document.querySelector("#theme-toggle"));
 init();

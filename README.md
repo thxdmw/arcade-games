@@ -32,7 +32,7 @@ runtime/
     └── covers/cover.png
 ```
 
-每个游戏目录完全独立：`roms/` 必须只有一个主游戏 ZIP；需要父 ROM 时放进 `parents/`；`bios/` 最多一个 BIOS；`covers/` 可放与游戏目录同名、与 ROM 同名或名为 `cover` 的 PNG、WebP、JPG。开发服务器和 nginx 会逐层生成 JSON 目录索引，浏览器刷新时自动生成游戏列表。FBNeo 对 romset 版本很敏感；压缩包能被下载不代表一定与本项目固定的 FBNeo 4.2.3 核心匹配。
+每个游戏目录完全独立：`roms/` 必须只有一个主游戏 ZIP；需要父 ROM 时放进 `parents/`；`bios/` 最多一个 BIOS；`covers/` 可放与游戏目录同名、与 ROM 同名或名为 `cover` 的 PNG、WebP、JPG。首次访问会并行扫描目录并缓存清单；以后先显示缓存，只检查一次很小的 `runtime/` 根目录列表。页面每 15 秒检查新增或删除的游戏，也可以点击“刷新”重新扫描。进入游戏页会复用清单缓存或只扫描所选目录，不再扫描全部游戏。FBNeo 对 romset 版本很敏感；压缩包能被下载不代表一定与本项目固定的 FBNeo 4.2.3 核心匹配。
 
 首次运行会下载 ROM、父 ROM 和 BIOS，EmulatorJS 随后将它们写入浏览器 IndexedDB；后续进入同一游戏只用 HEAD 检查文件大小，匹配时直接读取本机缓存。清理站点数据或浏览器拒绝持久存储后仍可能重新下载。
 
@@ -70,7 +70,7 @@ ARCADE_HOST_PORT=20002 ARCADE_DATA_DIR=/app/arcade-games/arcade-games-data bash 
     └── covers/
 ```
 
-部署脚本不会覆盖服务器已经维护的游戏资源。它会确认宿主机目录、Docker 实际挂载源和容器内 `/runtime/` JSON 接口一致，任一环节不正确都会停止并给出错误。复制新的 ZIP 后刷新首页即可；如果沿用相同文件名替换 ROM，建议同时强制刷新浏览器缓存。
+部署脚本不会覆盖服务器已经维护的游戏资源。它会确认宿主机目录、Docker 实际挂载源和容器内 `/runtime/` JSON 接口一致，任一环节不正确都会停止并给出错误。直接在已经挂载的 `arcade-games-data` 目录内新增或更新游戏文件夹，不要删除并重新创建这个挂载根目录；Docker 对根目录本身的替换不会自动跟随。正常上传完成后无需重启容器，打开着的首页最多约 15 秒会发现新目录。沿用相同文件名替换 ROM 时建议点击“刷新”，并清理该游戏的 EmulatorJS ROM 缓存。
 
 如果页面仍显示 `/runtime/` 404，先在服务器执行：
 

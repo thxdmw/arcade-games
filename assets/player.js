@@ -1,4 +1,5 @@
-import { getGameResourceUrls, loadCatalog, probeGameResources, stableNumericId } from "./catalog.js";
+import { gameFromRuntime, getGameResourceUrls, loadCatalog, probeGameResources, stableNumericId } from "./catalog.js";
+import { readCatalogCache, upsertCachedGame } from "./catalog-cache.js";
 import { createArcadeDefaultControls, installEmulatorKeyboardBridge } from "./controls.js";
 import { configureEmulatorResourceCache, requestPersistentBrowserStorage } from "./resource-cache.js";
 import { createSaveRepository } from "./storage.js";
@@ -108,7 +109,9 @@ function installEmulator(game, urls, repository, resumeState) {
 }
 
 async function init() {
-  const gameId = new URLSearchParams(window.location.search).get("id");
+  const parameters = new URLSearchParams(window.location.search);
+  const gameId = parameters.get("id");
+  const runtimeFolder = parameters.get("folder");
   if (!gameId) {
     showError("没有选择游戏", "请返回大厅并选择一个已经挂载资源的游戏。");
     return;
@@ -116,8 +119,16 @@ async function init() {
 
   try {
     await requestPersistentBrowserStorage();
-    const [catalog, repository] = await Promise.all([loadCatalog(), createSaveRepository()]);
-    const game = catalog.games.find((item) => item.id === gameId);
+    const repositoryPromise = createSaveRepository();
+    const cachedCatalog = readCatalogCache();
+    let game = cachedCatalog?.games.find((item) => item.id === gameId);
+    if (runtimeFolder && (!game || game.runtimeFolder !== runtimeFolder)) {
+      game = await gameFromRuntime(runtimeFolder);
+      if (game.id !== gameId) throw new Error("游戏目录与请求的游戏 ID 不一致");
+      upsertCachedGame(game);
+    }
+    if (!game) game = (await loadCatalog()).games.find((item) => item.id === gameId);
+    const repository = await repositoryPromise;
     if (!game) {
       showError("游戏不存在", `清单中没有 ID 为“${gameId}”的游戏。`);
       return;
