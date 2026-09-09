@@ -271,7 +271,12 @@ footer { min-height: 90px; padding: 0 clamp(22px, 7vw, 110px); display: flex; al
   text-shadow: 3px 3px 0 color-mix(in srgb, var(--orange) 78%, transparent);
 }
 .machine-zone .machine-screen.is-preview small { margin-top: 18px; color: var(--acid); animation: none; letter-spacing: 0.16em; }
-.machine-dock { display: flex; align-items: center; gap: 12px; }
+.machine-dock {
+  margin-top: clamp(6px, 1vh, 10px);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .random-game {
   min-width: 0;
   flex: 1;
