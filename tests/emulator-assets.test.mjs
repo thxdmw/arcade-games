@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { emulatorRuntimeScripts, patchEmulatorArchivePath } from "../scripts/emulator-assets.mjs";
+import {
+  emulatorRuntimeScripts,
+  fbneoCoreFiles,
+  patchEmulatorArchivePath,
+  validateFbneoCoreFiles
+} from "../scripts/emulator-assets.mjs";
 
 test("嵌套 runtime URL 写入虚拟文件系统时只保留压缩包名称", () => {
   const source = "before; this.gameManager.FS.writeFile(assetUrl, new Uint8Array(input)); after;";
@@ -27,4 +32,12 @@ test("单文件运行包包含 EmulatorJS 加载器要求的全部脚本", () =>
     "socket.io.min.js",
     "compression.js"
   ]);
+});
+
+test("定制 FBNeo 核心必须同时提供四种浏览器运行模式", () => {
+  assert.deepEqual(validateFbneoCoreFiles([...fbneoCoreFiles, "README.md"]), [...fbneoCoreFiles].sort());
+  assert.throws(
+    () => validateFbneoCoreFiles(fbneoCoreFiles.filter((name) => name !== "fbneo-thread-wasm.data")),
+    /核心文件不完整/
+  );
 });

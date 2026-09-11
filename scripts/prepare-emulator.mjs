@@ -1,17 +1,31 @@
-import { cp, mkdir, readdir, readFile, rm, copyFile, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readdir, readFile, rm, copyFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { emulatorRuntimeScripts, patchEmulatorArchivePath } from "./emulator-assets.mjs";
+import { emulatorRuntimeScripts, patchEmulatorArchivePath, validateFbneoCoreFiles } from "./emulator-assets.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
 const runtimeSource = join(projectRoot, "node_modules", "@emulatorjs", "emulatorjs", "data");
 const runtimeLicense = join(projectRoot, "node_modules", "@emulatorjs", "emulatorjs", "LICENSE");
-const coreSource = join(projectRoot, "node_modules", "@emulatorjs", "core-fbneo");
+const packageCoreSource = join(projectRoot, "node_modules", "@emulatorjs", "core-fbneo");
+const customCoreSource = join(projectRoot, "vendor", "core-fbneo");
 const outputDirectory = join(projectRoot, "public", "emulatorjs", "data");
 const coreOutputDirectory = join(outputDirectory, "cores");
 const sourceOutputDirectory = join(outputDirectory, "src");
+
+async function directoryExists(path) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// 定制核心为 kovplus2007 提供独立驱动；缺少定制产物时仍允许上游核心服务其他游戏。
+const usesCustomCore = await directoryExists(customCoreSource);
+const coreSource = usesCustomCore ? customCoreSource : packageCoreSource;
 
 // 只清理脚本自己生成的固定目录，避免升级依赖后留下已删除的旧核心文件。
 if (!outputDirectory.startsWith(join(projectRoot, "public"))) {
@@ -36,9 +50,8 @@ const bundledRuntime = await Promise.all(emulatorRuntimeScripts.map(async (name)
 await writeFile(join(outputDirectory, "emulator.min.js"), bundledRuntime.join(";\n"));
 await copyFile(join(outputDirectory, "emulator.css"), join(outputDirectory, "emulator.min.css"));
 
-const coreFiles = (await readdir(coreSource)).filter((name) => /^fbneo(?:-thread)?(?:-legacy)?-wasm\.data$/.test(name));
-if (coreFiles.length === 0) throw new Error("@emulatorjs/core-fbneo 中没有找到核心数据文件");
+const coreFiles = validateFbneoCoreFiles(await readdir(coreSource));
 await Promise.all(coreFiles.map((name) => copyFile(join(coreSource, name), join(coreOutputDirectory, name))));
 await cp(join(coreSource, "reports"), join(coreOutputDirectory, "reports"), { recursive: true });
 
-console.log(`已准备 EmulatorJS 运行资源，共 ${coreFiles.length} 个 FBNeo 核心文件，并生成浏览器运行包。`);
+console.log(`已准备 EmulatorJS 运行资源，共 ${coreFiles.length} 个${usesCustomCore ? "定制 " : " "}FBNeo 核心文件，并生成浏览器运行包。`);

@@ -16,7 +16,7 @@ npm run prepare:emulator
 npm run dev
 ```
 
-`prepare:emulator` 不仅复制 FBNeo 核心，还会生成 npm 包中缺失的浏览器运行文件并修正嵌套 `runtime` URL 的压缩包写入路径；首次安装依赖或升级 EmulatorJS 后必须重新执行。
+`prepare:emulator` 不仅复制 FBNeo 核心，还会生成 npm 包中缺失的浏览器运行文件并修正嵌套 `runtime` URL 的压缩包写入路径。项目自带的 `vendor/core-fbneo/` 定制核心会优先于 npm 原版核心，用于识别独立短名称 `kovplus2007`；首次安装依赖或升级 EmulatorJS 后必须重新执行。
 
 终端会输出实际访问地址。默认是 `http://localhost:5173`；如果这个端口已被占用，会自动尝试 `5174`、`5175` 等后续端口。把资源放入以下目录后刷新首页：
 
@@ -33,6 +33,17 @@ runtime/
 ```
 
 每个游戏目录完全独立：`roms/` 必须只有一个主游戏 ZIP；需要父 ROM 时放进 `parents/`；`bios/` 最多一个 BIOS；`covers/` 可放与游戏目录同名、与 ROM 同名或名为 `cover` 的 PNG、WebP、JPG。首次访问会并行扫描目录并缓存清单；以后先显示缓存，只检查一次很小的 `runtime/` 根目录列表。页面每 15 秒检查新增或删除的游戏，也可以点击“刷新”重新扫描。进入游戏页会复用清单缓存或只扫描所选目录，不再扫描全部游戏。FBNeo 对 romset 版本很敏感；压缩包能被下载不代表一定与本项目固定的 FBNeo 4.2.3 核心匹配。
+
+三国战纪 2007 快速集气版使用项目内的独立驱动，不覆盖原版 `kovplus`，也不需要 `game.json`。目录名仍是页面展示名称，主包必须叫 `kovplus2007.zip`，包内修改程序必须叫 `p0600.119`；该包已经合并所需的公共图形和声音 ROM，因此本游戏只需另放 `pgm.zip` BIOS，不要再放 `parents/kovplus.zip`：
+
+```text
+runtime/三国战纪_2007快速集气版_修改版/
+├── roms/kovplus2007.zip
+├── bios/pgm.zip
+└── covers/cover.png
+```
+
+定制驱动的源码补丁、固定版本和重建说明见 [`docs/custom-fbneo-core.md`](docs/custom-fbneo-core.md)。
 
 首次运行会下载 ROM、父 ROM 和 BIOS，EmulatorJS 随后将它们写入浏览器 IndexedDB；后续进入同一游戏只用 HEAD 检查文件大小，匹配时直接读取本机缓存。清理站点数据或浏览器拒绝持久存储后仍可能重新下载。
 

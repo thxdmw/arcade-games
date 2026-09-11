@@ -1,0 +1,44 @@
+diff --git a/src/burn/drv/pgm/d_pgm.cpp b/src/burn/drv/pgm/d_pgm.cpp
+--- a/src/burn/drv/pgm/d_pgm.cpp
++++ b/src/burn/drv/pgm/d_pgm.cpp
+@@ -2511,6 +2511,40 @@ struct BurnDriver BurnDrvKovplus = {
+ };
+ 
+ 
++// Knights of Valour Plus (2007 Fast Power Hack)
++
++static struct BurnRomInfo kovplus2007RomDesc[] = {
++	{ "p0600.119",                  0x0400000, 0xb2ee0885, 1 | BRF_PRG | BRF_ESS }, //  0 68K Code
++
++	{ "pgm_t0600.u11",             0x0800000, 0x4acc1ad6, 2 | BRF_GRA },           //  1 Tile data
++
++	{ "pgm_a0600.u2",              0x0800000, 0xd8167834, 3 | BRF_GRA },           //  2 Sprite Color Data
++	{ "pgm_a0601.u4",              0x0800000, 0xff7a4373, 3 | BRF_GRA },           //  3
++	{ "pgm_a0602.u6",              0x0800000, 0xe7a32959, 3 | BRF_GRA },           //  4
++	{ "pgm_a0603.u9",              0x0400000, 0xec31abda, 3 | BRF_GRA },           //  5
++
++	{ "pgm_b0600.u5",              0x0800000, 0x7d3cd059, 4 | BRF_GRA },           //  6 Sprite Masks & Color Indexes
++	{ "pgm_b0601.u7",              0x0400000, 0xa0bb1c2f, 4 | BRF_GRA },           //  7
++
++	{ "pgm_m0600.u3",              0x0400000, 0x3ada4fd6, 5 | BRF_SND },           //  8 Samples
++
++	{ "kov_igs027a.bin",           0x0004000, 0x00000000, 7 | BRF_PRG | BRF_ESS | BRF_NODUMP }, //  9 Internal ARM7 Rom
++};
++
++STDROMPICKEXT(kovplus2007, kovplus2007, pgm)
++STD_ROM_FN(kovplus2007)
++
++struct BurnDriver BurnDrvKovplus2007 = {
++	"kovplus2007", "kovplus", "pgm", NULL, "2007",
++	"Knights of Valour Plus (2007 Fast Power Hack)\0", NULL, "IGS / hack", "PolyGame Master",
++	L"Knights of Valour Plus (2007 Fast Power Hack)\0\u4e09\u56fd\u6218\u7eaa 2007\u5feb\u901f\u96c6\u6c14\u7248\0", NULL, NULL, NULL,
++	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK, 4, HARDWARE_IGS_PGM/* | HARDWARE_IGS_USE_ARM_CPU*/, GBF_SCRFIGHT, 0,
++	NULL, kovplus2007RomInfo, kovplus2007RomName, NULL, NULL, NULL, NULL, pgmInputInfo, kov115DIPInfo,
++	kovInit, pgmExit, pgmFrame, pgmDraw, pgmScan, &nPgmPalRecalc, 0x900,
++	448, 224, 4, 3
++};
++
++
+ // Knights of Valour Plus / San Guo Zhan Ji - Zheng Zong Plus / Sangoku Senki Masamune Plus (ver. 119, set 2)
+ 
+ /* IGS PCB N0-0212-1 MADE IN TAIWAN

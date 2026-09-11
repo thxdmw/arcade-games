@@ -4,6 +4,7 @@ WORKDIR /site
 COPY package.json package-lock.json ./
 RUN npm ci --omit=optional
 COPY scripts/prepare-emulator.mjs scripts/emulator-assets.mjs scripts/
+COPY vendor vendor/
 RUN npm run prepare:emulator
 
 FROM nginx:stable-alpine

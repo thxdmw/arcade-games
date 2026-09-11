@@ -5,6 +5,8 @@
 node_modules/
 public/emulatorjs/
 .tmp-emulator-inspect/
+.tmp-fbneo-build/
+.tmp-core-inspect/
 
 # runtime 内的游戏版权资源由 runtime/.gitignore 统一排除。
 
