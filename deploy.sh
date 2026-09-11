@@ -24,7 +24,8 @@ if [ "${ARCADE_SKIP_RUNTIME_PROBE:-0}" != "1" ]; then
     fi
 
     RUNTIME_PROBE_IMAGE=""
-    for CANDIDATE in node:22-alpine nginx:stable-alpine alpine:latest; do
+    # 正常升级时站点旧镜像最可能存在；BuildKit 缓存中的基础层未必带普通镜像标签，不能只检查 node/nginx。
+    for CANDIDATE in "${IMAGE_NAME}:latest" node:22-alpine nginx:stable-alpine alpine:latest; do
         if sudo docker image inspect "${CANDIDATE}" >/dev/null 2>&1; then
             RUNTIME_PROBE_IMAGE="${CANDIDATE}"
             break
@@ -32,8 +33,15 @@ if [ "${ARCADE_SKIP_RUNTIME_PROBE:-0}" != "1" ]; then
     done
 
     if [ -z "${RUNTIME_PROBE_IMAGE}" ]; then
-        echo "提示：本地没有可用于探活的基础镜像，跳过容器运行时自检。"
-    elif ! RUNTIME_PROBE_OUTPUT="$(sudo docker run --rm --entrypoint /bin/true "${RUNTIME_PROBE_IMAGE}" 2>&1)"; then
+        echo "本地没有可用于探活的镜像，先拉取轻量 Alpine 镜像。"
+        if ! sudo docker pull alpine:latest; then
+            echo "错误：无法取得容器运行时探活镜像；部署本身也需要访问镜像仓库，已停止。"
+            exit 1
+        fi
+        RUNTIME_PROBE_IMAGE="alpine:latest"
+    fi
+
+    if ! RUNTIME_PROBE_OUTPUT="$(sudo docker run --rm --entrypoint /bin/true "${RUNTIME_PROBE_IMAGE}" 2>&1)"; then
         echo "错误：容器运行时起不来了，构建必然失败，已提前停止。"
         printf '%s\n' "${RUNTIME_PROBE_OUTPUT}" | tail -n 20
         echo "这属于服务器环境故障，排查步骤见 docs/docker-runtime-troubleshooting.md"

@@ -101,4 +101,4 @@ sudo env DEPLOY_RELEASE_TAG=<commit sha> bash ./deploy.sh
 
 ## deploy.sh 的前置自检
 
-`deploy.sh` 现在会先确认 `docker info` 可用，再用一个本地已有的镜像起一次最小容器探活。失败时直接打印中文错误并指向本文档，不会再让构建抛出难懂的 Go 堆栈。探活本身误报时，可以用 `ARCADE_SKIP_RUNTIME_PROBE=1` 跳过这次检查。
+`deploy.sh` 现在会先确认 `docker info` 可用，再优先用上一版 `arcade-games:latest` 或本地已有的基础镜像起一次最小容器探活。首次部署没有普通镜像标签时，会先拉取轻量的 `alpine:latest` 再探活，不能再因为镜像只存在于 BuildKit 缓存而静默跳过。失败时脚本会直接打印中文错误并指向本文档，不会再让构建抛出难懂的 Go 堆栈。探活本身误报时，可以用 `ARCADE_SKIP_RUNTIME_PROBE=1` 跳过这次检查。
