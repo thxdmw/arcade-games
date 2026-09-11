@@ -1,10 +1,11 @@
 import { gameFromRuntime, getGameResourceUrls, loadCatalog, probeGameResources, stableNumericId } from "./catalog.js";
 import { readCatalogCache, upsertCachedGame } from "./catalog-cache.js";
 import { createArcadeDefaultControls, installEmulatorKeyboardBridge } from "./controls.js";
-import { configureEmulatorResourceCache, requestPersistentBrowserStorage } from "./resource-cache.js";
+import { configureEmulatorResourceCache, requestPersistentBrowserStorage, versionedEmulatorAsset } from "./resource-cache.js";
 import { createSaveRepository } from "./storage.js";
 import { installThemeToggle } from "./theme.js";
 import { installMoveListPanel } from "./move-list-panel.js";
+import { installPlayerHelpResize } from "./player-layout.js";
 
 const elements = {
   shell: document.querySelector("#emulator-shell"),
@@ -23,6 +24,7 @@ const elements = {
 
 let stateObjectUrl = null;
 const removeKeyboardBridge = installEmulatorKeyboardBridge(document, () => window.EJS_emulator);
+const removePlayerHelpResize = installPlayerHelpResize(document.querySelector("#player-help-resizer"));
 
 function showError(title, message) {
   elements.boot.hidden = true;
@@ -104,7 +106,7 @@ function installEmulator(game, urls, repository, resumeState) {
   };
 
   const loader = document.createElement("script");
-  loader.src = "/emulatorjs/data/loader.js";
+  loader.src = versionedEmulatorAsset("/emulatorjs/data/loader.js");
   loader.addEventListener("error", () => showError("模拟器资源缺失", "请先运行 npm run prepare:emulator，或重新构建 Docker 镜像。"), { once: true });
   document.body.append(loader);
 }
@@ -170,6 +172,7 @@ document.querySelector("#fullscreen").addEventListener("click", async () => {
 
 window.addEventListener("beforeunload", () => {
   removeKeyboardBridge();
+  removePlayerHelpResize();
   if (stateObjectUrl) URL.revokeObjectURL(stateObjectUrl);
 });
 

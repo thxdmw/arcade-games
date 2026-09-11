@@ -51,23 +51,24 @@
       </section>
 
       <aside class="player-help">
-        <div class="help-card">
-          <p class="eyebrow">CONTROLS</p>
-          <h2>默认操作</h2>
+        <div class="player-help-resizer" id="player-help-resizer" role="separator" aria-label="调整右侧工具栏宽度" aria-orientation="vertical" aria-valuemin="280" aria-valuemax="720" aria-valuenow="280" tabindex="0"></div>
+        <div class="help-card quick-guide">
+          <div class="quick-guide-heading">
+            <div>
+              <p class="eyebrow">QUICK GUIDE</p>
+              <h2>操作与存档</h2>
+            </div>
+            <span class="save-indicator" id="save-indicator"><i></i>等待游戏启动</span>
+          </div>
           <dl>
             <div><dt>方向</dt><dd>W A S D</dd></div>
             <div><dt>动作</dt><dd>J K U I</dd></div>
             <div><dt>投币</dt><dd>5</dd></div>
             <div><dt>开始</dt><dd>Enter</dd></div>
           </dl>
-          <p>数字 5 投币、Enter 开始；“控制设置”窗口打开时会暂时停用游戏输入。</p>
+          <p class="quick-guide-note">5 投币 · Enter 开始 · 自动保存到当前设备；重要存档可从模拟器菜单导出。</p>
         </div>
-        <div class="help-card save-help">
-          <p class="eyebrow">LOCAL SAVE</p>
-          <h2>存档在这台设备</h2>
-          <p>模拟器自动保存 NVRAM。点击工具栏的保存状态按钮，还会记录一个“继续上次”存档。</p>
-          <span class="save-indicator" id="save-indicator"><i></i>等待游戏启动</span>
-        </div>
+        <section class="move-list-desktop" id="move-list-desktop" aria-label="游戏出招表" hidden></section>
       </aside>
     </main>
 
