@@ -28,8 +28,9 @@ Arcade Vault 是一个纯前端网页街机厅。浏览器通过 EmulatorJS 4.2.
 | `vendor/core-fbneo/` | 随部署分发的四套定制 FBNeo 核心与构建报告 |
 | `patches/fbneo-kovplus2007.patch` | `kovplus2007` 独立驱动源码补丁，不覆盖上游 `kovplus` |
 | `docs/custom-fbneo-core.md` | 定制核心固定版本、ROM 约定与重建说明 |
+| `docs/docker-runtime-troubleshooting.md` | 构建在 `RUN` 步骤抛出 Go panic 时，区分服务器容器运行时故障与项目故障 |
 | `nginx.conf` | 静态资源缓存、WASM MIME 与跨源隔离响应头 |
-| `deploy.sh` | 参考同级 `game` 项目的服务器镜像构建与容器替换流程 |
+| `deploy.sh` | 参考同级 `game` 项目的服务器镜像构建与容器替换流程，构建前先探活容器运行时 |
 
 ## 不可破坏的边界
 
@@ -61,6 +62,7 @@ docker build -t arcade-games:test .
 - nginx 的 `/runtime/` JSON 目录索引是自动发现入口；外层代理不得拦截或改写其各级目录请求。
 - 大厅清单保存在 localStorage，首扫按游戏并行；之后只轮询根目录并增量扫描新增项。游戏页应复用缓存或通过 `folder` 参数只扫描目标目录，不能重新扫描整个 runtime。
 - Docker bind mount 能立即看到挂载目录内部的变化，但看不到宿主机将挂载根目录整体删除后重建；上传资源只能修改根目录内部内容。
+- 服务器容器运行时（runc 的 prestart hook）坏掉时，构建会在第一个 `RUN` 步骤失败，报错全是 hook 进程的 Go 堆栈（`error running prestart hook #0`、`name offset out of range`），与仓库无关。更麻烦的是 `RUN` 步骤命中 Docker 层缓存时构建根本不起容器，故障能静默存在很久，只有改动 `package.json`、锁文件或 `scripts/` 的那次提交才撞得上。`deploy.sh` 已加构建前的运行时探活，排查步骤见 `docs/docker-runtime-troubleshooting.md`。
 - `deploy.sh` 默认挂载 `/app/arcade-games/arcade-games-data`；Docker Compose 默认挂载仓库 `runtime`，服务器使用 Compose 时必须通过 `ARCADE_DATA_DIR` 指向实际上传目录。
 - 每个游戏目录的 `roms/`、`bios/`、`parents/` 都至多放一个 ZIP；只有主 ROM 放在 `roms/`，否则无法可靠判断资源角色。
 - EmulatorJS 调试模式会跳过已经写入 IndexedDB 的 ROM 缓存；不得重新启用 `EJS_DEBUG_XX`。

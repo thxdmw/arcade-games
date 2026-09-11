@@ -13,6 +13,34 @@ case "${DATA_DIR}" in
     *) DATA_DIR="$(pwd)/${DATA_DIR#./}" ;;
 esac
 
+# 服务器上的容器运行时坏掉时，镜像构建会在第一个 RUN 步骤失败，抛出的全是 hook 进程的 Go 堆栈，
+# 和本项目毫无关系，却极易被误判成依赖或代码问题。这里先探活一次，把这种环境故障挡在构建之前。
+# 探活用的镜像必须是本地已有的，避免依赖网络。
+if [ "${ARCADE_SKIP_RUNTIME_PROBE:-0}" != "1" ]; then
+    echo "==> 自检 Docker 容器运行时"
+    if ! sudo docker info >/dev/null 2>&1; then
+        echo "错误：Docker 守护进程不可用，请先检查 sudo systemctl status docker。"
+        exit 1
+    fi
+
+    RUNTIME_PROBE_IMAGE=""
+    for CANDIDATE in node:22-alpine nginx:stable-alpine alpine:latest; do
+        if sudo docker image inspect "${CANDIDATE}" >/dev/null 2>&1; then
+            RUNTIME_PROBE_IMAGE="${CANDIDATE}"
+            break
+        fi
+    done
+
+    if [ -z "${RUNTIME_PROBE_IMAGE}" ]; then
+        echo "提示：本地没有可用于探活的基础镜像，跳过容器运行时自检。"
+    elif ! RUNTIME_PROBE_OUTPUT="$(sudo docker run --rm --entrypoint /bin/true "${RUNTIME_PROBE_IMAGE}" 2>&1)"; then
+        echo "错误：容器运行时起不来了，构建必然失败，已提前停止。"
+        printf '%s\n' "${RUNTIME_PROBE_OUTPUT}" | tail -n 20
+        echo "这属于服务器环境故障，排查步骤见 docs/docker-runtime-troubleshooting.md"
+        exit 1
+    fi
+fi
+
 echo "==> 准备资源目录 ${DATA_DIR}"
 sudo mkdir -p "${DATA_DIR}"
 sudo chmod -R a+rX "${DATA_DIR}"
