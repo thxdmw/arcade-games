@@ -4,6 +4,7 @@ import { createArcadeDefaultControls, installEmulatorKeyboardBridge } from "./co
 import { configureEmulatorResourceCache, requestPersistentBrowserStorage } from "./resource-cache.js";
 import { createSaveRepository } from "./storage.js";
 import { installThemeToggle } from "./theme.js";
+import { installMoveListPanel } from "./move-list-panel.js";
 
 const elements = {
   shell: document.querySelector("#emulator-shell"),
@@ -138,6 +139,7 @@ async function init() {
     elements.title.textContent = game.title;
     elements.platform.textContent = `${game.platform} / ${game.core.toUpperCase()}`;
     elements.bootTitle.textContent = `正在装载 ${game.title}`;
+    installMoveListPanel(game.id);
 
     const status = await probeGameResources(game);
     if (!status.ready) {

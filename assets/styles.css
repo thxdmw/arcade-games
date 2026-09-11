@@ -471,6 +471,53 @@ footer { min-height: 90px; padding: 0 clamp(22px, 7vw, 110px); display: flex; al
 .save-indicator.active { color: #aad28f; }
 .save-indicator.active i { background: #8dff69; box-shadow: 0 0 8px #8dff69; }
 
+.move-list-trigger { border: 1px solid var(--line); }
+.move-list-dialog {
+  width: min(900px, calc(100vw - 40px));
+  max-width: none;
+  max-height: min(88vh, 920px);
+  margin: auto;
+  padding: 0;
+  color: var(--text);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.42);
+}
+.move-list-dialog::backdrop { background: rgba(3, 5, 6, 0.72); backdrop-filter: blur(5px); }
+.move-list-sheet { max-height: min(88vh, 920px); padding: clamp(22px, 4vw, 42px); overflow-y: auto; scrollbar-color: var(--acid) transparent; scrollbar-width: thin; }
+.move-list-sheet::-webkit-scrollbar { width: 7px; }
+.move-list-sheet::-webkit-scrollbar-track { background: transparent; }
+.move-list-sheet::-webkit-scrollbar-thumb { background: var(--acid); }
+.move-list-sheet > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; }
+.move-list-sheet h2 { margin: 0; font: 900 clamp(30px, 4vw, 48px)/1 "Arial Narrow", "Microsoft YaHei UI", sans-serif; }
+.move-list-sheet header div > p:last-child { max-width: 620px; margin: 12px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.move-list-close { flex: none; width: 38px; height: 38px; color: var(--text); border: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 25px; line-height: 1; }
+.move-list-close:hover { color: var(--ink); border-color: var(--acid); background: var(--acid); }
+.move-list-legend { margin-top: 24px; padding: 16px 18px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 18px; border-left: 3px solid var(--acid); background: var(--surface-soft); font-size: 11px; }
+.move-list-legend strong { color: var(--acid); letter-spacing: 0.08em; }
+.move-list-legend span { font-family: monospace; font-weight: 700; }
+.move-list-legend small { width: 100%; color: var(--muted); line-height: 1.65; }
+.move-list-search { min-height: 46px; margin-top: 20px; padding: 0 15px; display: flex; align-items: center; gap: 11px; border: 1px solid var(--line); background: var(--page); }
+.move-list-search:focus-within { border-color: var(--acid); box-shadow: 0 0 0 2px color-mix(in srgb, var(--acid) 18%, transparent); }
+.move-list-search span { color: var(--acid); font-size: 21px; }
+.move-list-search input { width: 100%; padding: 10px 0; color: var(--text); border: 0; outline: 0; background: transparent; font-size: 13px; }
+.move-list-search input::placeholder { color: var(--muted); }
+.move-list-shortcuts { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 7px; }
+.move-list-shortcuts button { padding: 6px 10px; color: var(--muted); border: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 10px; }
+.move-list-shortcuts button:hover { color: var(--ink); border-color: var(--acid); background: var(--acid); }
+.move-list-result-count { margin: 20px 0 10px; color: var(--muted); font-size: 10px; letter-spacing: 0.08em; }
+.move-list-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.move-list-results.is-empty::after { content: "换个人物名称或招式名称试试"; grid-column: 1 / -1; padding: 45px 20px; color: var(--muted); border: 1px dashed var(--line); text-align: center; font-size: 12px; }
+.move-character { border: 1px solid var(--line); background: var(--page); }
+.move-character h3 { margin: 0; padding: 14px 16px; color: var(--ink); background: var(--acid); font: 900 20px "Arial Narrow", "Microsoft YaHei UI", sans-serif; }
+.move-row { padding: 12px 15px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 12px; border-top: 1px solid var(--line); }
+.move-row:first-of-type { border-top: 0; }
+.move-row > div { min-width: 0; display: flex; align-items: baseline; gap: 8px; }
+.move-row strong { font-size: 12px; }
+.move-row div span { color: var(--muted); font-size: 9px; white-space: nowrap; }
+.move-row code { align-self: center; color: var(--orange); font-size: 12px; font-weight: 800; white-space: nowrap; }
+.move-row small { grid-column: 1 / -1; color: var(--muted); font-size: 9px; }
+
 @media (max-width: 900px) {
   .hero { grid-template-columns: 1fr; padding-top: 70px; }
   .hero .hero-machine { display: none; }
@@ -564,6 +611,14 @@ footer { min-height: 90px; padding: 0 clamp(22px, 7vw, 110px); display: flex; al
   .player-actions { gap: 6px; }
   .player-header .theme-toggle { min-width: 38px; padding-inline: 9px; }
   .player-header .theme-toggle small { display: none; }
+  .player-header { padding-inline: 12px; }
+  .player-title { max-width: 35vw; }
+  .player-actions .icon-button { padding-inline: 9px; }
+  .move-list-dialog { width: 100vw; max-height: 100vh; height: 100vh; border: 0; }
+  .move-list-sheet { max-height: 100vh; padding: 24px 16px; }
+  .move-list-results { grid-template-columns: 1fr; }
+  .move-row { grid-template-columns: minmax(0, 1fr); }
+  .move-row code { justify-self: start; }
 }
 
 @media (prefers-reduced-motion: reduce) {

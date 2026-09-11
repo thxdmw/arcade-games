@@ -20,6 +20,7 @@ Arcade Vault 是一个纯前端网页街机厅。浏览器通过 EmulatorJS 4.2.
 | `index.html`、`assets/app.js` | 游戏大厅、筛选、资源可用性检测 |
 | `assets/game-presentation.js` | 卡片版本标签与左侧街机屏幕预览文本 |
 | `play.html`、`assets/player.js` | 模拟器装载、继续游戏、运行状态提示 |
+| `assets/move-lists.js`、`assets/move-list-panel.js` | 分游戏维护出招数据，并提供人物与招式搜索面板 |
 | `assets/catalog.js` | 独立游戏目录发现、资源角色校验与安全 URL 生成 |
 | `assets/theme.js` | 默认亮色、暗亮切换与本地偏好保存 |
 | `assets/storage.js` | 可替换的存档仓库接口及 IndexedDB 实现 |
@@ -65,6 +66,7 @@ docker build -t arcade-games:test .
 - EmulatorJS 调试模式会跳过已经写入 IndexedDB 的 ROM 缓存；不得重新启用 `EJS_DEBUG_XX`。
 - 浏览器隐私模式、清理站点数据或更换域名会让本地存档不可见；重要存档应在模拟器菜单中导出备份。
 - 页面展示的键位必须同步维护在 `assets/controls.js`；EmulatorJS 自带默认键位不是 WASD，并且用户保存过的自定义键位会优先于项目默认值。
+- 出招表使用街机 A/B/C/D 记法，页面必须同时说明本站 J/K/U/I 的对应关系；新增游戏时在 `assets/move-lists.js` 按游戏 ID 独立登记，不能让版本不明的招式污染其它游戏。
 - EmulatorJS 4.2.3 只在模拟器内部容器监听键盘；`assets/controls.js` 的页面级桥接负责处理焦点落在侧栏或已关闭菜单按钮上的情况，并保证短按至少维持数帧，升级依赖时需回归这条路径。
 - EmulatorJS 4.2.3 默认解压 BIOS/父 ROM，但 FBNeo 按 ZIP romset 名称查找它们；游戏页必须保持 `EJS_dontExtractBIOS = true`，并把各游戏目录中的完整资源 URL 传给模拟器。
 - EmulatorJS 4.2.3 在 `dontExtractBIOS` 模式下会错误地用完整 URL 写入虚拟文件系统；`prepare-emulator.mjs` 会将其修补为 ZIP 文件名。升级依赖后如果上游逻辑变化，准备脚本必须明确失败，不能静默跳过。

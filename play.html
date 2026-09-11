@@ -16,6 +16,7 @@
         <strong id="game-title">正在装载游戏</strong>
       </div>
       <div class="player-actions">
+        <button class="icon-button move-list-trigger" id="move-list-trigger" type="button" aria-controls="move-list-dialog" aria-expanded="false" hidden>出招表</button>
         <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到暗色模式">
           <span aria-hidden="true">☾</span><small>暗色</small>
         </button>
@@ -69,6 +70,34 @@
         </div>
       </aside>
     </main>
+
+    <dialog class="move-list-dialog" id="move-list-dialog" aria-labelledby="move-list-title">
+      <section class="move-list-sheet">
+        <header>
+          <div>
+            <p class="eyebrow">COMMAND LIST</p>
+            <h2 id="move-list-title">出招表</h2>
+            <p id="move-list-description"></p>
+          </div>
+          <button class="move-list-close" id="move-list-close" type="button" aria-label="关闭出招表">×</button>
+        </header>
+        <div class="move-list-legend">
+          <strong>本站键位</strong>
+          <span>招式 A = J（攻击）</span>
+          <span>B = K（跳跃）</span>
+          <span>C = U（选道具）</span>
+          <span>D = I（用道具）</span>
+          <small>方向使用 WASD；斜方向要同时按两个键，例如 ↙ = S + A、↘ = S + D。</small>
+        </div>
+        <label class="move-list-search" for="move-list-search">
+          <span aria-hidden="true">⌕</span>
+          <input id="move-list-search" type="search" autocomplete="off" placeholder="搜索人物或招式，例如：诸葛亮">
+        </label>
+        <div class="move-list-shortcuts" id="move-list-shortcuts" aria-label="按人物筛选"></div>
+        <p class="move-list-result-count" id="move-list-result-count" aria-live="polite"></p>
+        <div class="move-list-results" id="move-list-results"></div>
+      </section>
+    </dialog>
 
     <script type="module" src="/assets/player.js"></script>
   </body>

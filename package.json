@@ -8,7 +8,7 @@
     "prepare:emulator": "node scripts/prepare-emulator.mjs",
     "dev": "node scripts/dev-server.mjs",
     "test": "node --test",
-    "check": "node --check assets/app.js && node --check assets/player.js && node --check assets/catalog.js && node --check assets/catalog-cache.js && node --check assets/game-presentation.js && node --check assets/controls.js && node --check assets/resource-cache.js && node --check assets/storage.js && node --check assets/theme.js && node --check scripts/emulator-assets.mjs && node --check scripts/prepare-emulator.mjs && node --check scripts/listen-with-fallback.mjs && node --check scripts/dev-server.mjs"
+    "check": "node --check assets/app.js && node --check assets/player.js && node --check assets/catalog.js && node --check assets/catalog-cache.js && node --check assets/game-presentation.js && node --check assets/move-lists.js && node --check assets/move-list-panel.js && node --check assets/controls.js && node --check assets/resource-cache.js && node --check assets/storage.js && node --check assets/theme.js && node --check scripts/emulator-assets.mjs && node --check scripts/prepare-emulator.mjs && node --check scripts/listen-with-fallback.mjs && node --check scripts/dev-server.mjs"
   },
   "dependencies": {
     "@emulatorjs/core-fbneo": "4.2.3",
