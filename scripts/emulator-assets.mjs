@@ -30,6 +30,17 @@ export function patchEmulatorArchivePath(source) {
   return source.replace(archiveWriteStatement, safeArchiveWriteStatement);
 }
 
+const externalFileWriteStatement = "this.writeFile(path, res.data);";
+const safeExternalFileWriteStatement = "this.writeFile(path, new Uint8Array(res.data));";
+
+export function patchEmulatorExternalFileData(source) {
+  const occurrences = source.split(externalFileWriteStatement).length - 1;
+  if (occurrences !== 1) {
+    throw new Error(`EmulatorJS 外部文件写入逻辑与预期不一致：找到 ${occurrences} 处`);
+  }
+  return source.replace(externalFileWriteStatement, safeExternalFileWriteStatement);
+}
+
 export function validateFbneoCoreFiles(fileNames) {
   const actual = fileNames.filter((name) => /^fbneo(?:-thread)?(?:-legacy)?-wasm\.data$/.test(name)).sort();
   const expected = [...fbneoCoreFiles].sort();

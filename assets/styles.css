@@ -446,6 +446,8 @@ footer { min-height: 90px; padding: 0 clamp(22px, 7vw, 110px); display: flex; al
 .player-title strong { margin-top: 4px; font: 700 15px "Noto Sans SC"; }
 .icon-button { padding: 8px 14px; color: var(--text); border: 1px solid var(--line); background: transparent; font-size: 11px; }
 .icon-button:hover { color: var(--ink); background: var(--acid); }
+.fast-power-toggle.active { color: #111; border-color: var(--orange); background: var(--orange); }
+.fast-power-toggle:disabled { cursor: wait; opacity: 0.5; }
 .player-main { height: calc(100vh - 68px); min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) var(--player-help-width, 280px); }
 .emulator-shell { min-width: 0; min-height: 0; position: relative; display: grid; place-items: center; background: #000; }
 #game { width: 100%; height: calc(100vh - 68px); }
@@ -655,6 +657,7 @@ footer { min-height: 90px; padding: 0 clamp(22px, 7vw, 110px); display: flex; al
   .player-header { padding-inline: 12px; }
   .player-title { max-width: 35vw; }
   .player-actions .icon-button { padding-inline: 9px; }
+  .fast-power-toggle { max-width: 74px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .move-list-dialog { width: 100vw; max-height: none; height: 100dvh; border: 0; }
   .move-list-sheet { height: 100%; padding: 24px 16px; }
   .move-list-results { grid-template-columns: 1fr; }

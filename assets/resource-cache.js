@@ -1,5 +1,5 @@
 const DEFAULT_CACHE_LIMIT = 1024 * 1024 * 1024;
-export const EMULATOR_ASSET_REVISION = "fbneo-kovplus2007-b2ee0885-v1";
+export const EMULATOR_ASSET_REVISION = "fbneo-kovplus2007-b2ee0885-v2";
 
 const VERSIONED_EMULATOR_FILES = Object.freeze({
   "emulator.min.js": "/emulatorjs/data/emulator.min.js",

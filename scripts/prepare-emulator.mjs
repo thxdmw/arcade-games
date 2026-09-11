@@ -2,7 +2,12 @@ import { access, cp, mkdir, readdir, readFile, rm, copyFile, writeFile } from "n
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { emulatorRuntimeScripts, patchEmulatorArchivePath, validateFbneoCoreFiles } from "./emulator-assets.mjs";
+import {
+  emulatorRuntimeScripts,
+  patchEmulatorArchivePath,
+  patchEmulatorExternalFileData,
+  validateFbneoCoreFiles
+} from "./emulator-assets.mjs";
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptDirectory, "..");
@@ -42,9 +47,15 @@ const emulatorSourcePath = join(sourceOutputDirectory, "emulator.js");
 const patchedEmulatorSource = patchEmulatorArchivePath(await readFile(emulatorSourcePath, "utf8"));
 await writeFile(emulatorSourcePath, patchedEmulatorSource);
 
+// 上游 4.2.3 直接把 ArrayBuffer 交给 Emscripten FS，最终只会创建 0 字节外部文件。
+const gameManagerSourcePath = join(sourceOutputDirectory, "GameManager.js");
+const patchedGameManagerSource = patchEmulatorExternalFileData(await readFile(gameManagerSourcePath, "utf8"));
+await writeFile(gameManagerSourcePath, patchedGameManagerSource);
+
 // npm 包不携带发布版 min 文件；生成单文件入口，避免加载器先产生两次无意义的 404。
 const bundledRuntime = await Promise.all(emulatorRuntimeScripts.map(async (name) => {
   if (name === "emulator.js") return patchedEmulatorSource;
+  if (name === "GameManager.js") return patchedGameManagerSource;
   return readFile(join(sourceOutputDirectory, name), "utf8");
 }));
 await writeFile(join(outputDirectory, "emulator.min.js"), bundledRuntime.join(";\n"));

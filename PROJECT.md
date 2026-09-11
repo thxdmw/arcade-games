@@ -20,6 +20,7 @@ Arcade Vault 是一个纯前端网页街机厅。浏览器通过 EmulatorJS 4.2.
 | `index.html`、`assets/app.js` | 游戏大厅、筛选、资源可用性检测 |
 | `assets/game-presentation.js` | 卡片版本标签与左侧街机屏幕预览文本 |
 | `play.html`、`assets/player.js`、`assets/player-layout.js` | 模拟器装载、继续游戏、运行状态提示及桌面工具栏宽度 |
+| `assets/game-features.js`、`assets/cheats/` | 按游戏 ID 注入可选 FBNeo 功能，并在运行中切换核心选项 |
 | `assets/move-lists.js`、`assets/move-list-panel.js` | 分游戏维护出招数据，并提供人物与招式搜索面板 |
 | `assets/catalog.js` | 独立游戏目录发现、资源角色校验与安全 URL 生成 |
 | `assets/theme.js` | 默认亮色、暗亮切换与本地偏好保存 |
@@ -71,6 +72,7 @@ docker build -t arcade-games:test .
 - 出招表使用街机 A/B/C/D 记法，页面必须同时说明本站 J/K/U/I 的对应关系；新增游戏时在 `assets/move-lists.js` 按游戏 ID 独立登记，不能让版本不明的招式污染其它游戏。
 - PC 出招表属于右侧工具栏内容，不能覆盖模拟器；默认宽度需至少完整显示一名人物的招式，工具栏拖宽后出招卡片自动切换为双列。EmulatorJS 仍保持画面比例，先减少黑色留白、空间不足后再等比缩小。移动端才把同一份出招表节点移入模态弹窗。
 - EmulatorJS 4.2.3 只在模拟器内部容器监听键盘；`assets/controls.js` 的页面级桥接负责处理焦点落在侧栏或已关闭菜单按钮上的情况，并保证短按至少维持数帧，升级依赖时需回归这条路径。
+- EmulatorJS 的通用秘籍接口在当前 FBNeo 核心中是空实现；游戏专属功能必须在核心装载前通过 `EJS_externalFiles` 写入 `/fbneo/cheats/<rom>.ini`，再切换 FBNeo 生成的核心选项。4.2.3 会把原始 `ArrayBuffer` 写成 0 字节文件，`prepare-emulator.mjs` 必须先转成 `Uint8Array`；`kov` 快速集气默认关闭，只写玩家 1 的 `0x81619F` 集气字段，不能把其它秘籍混入同一文件。
 - EmulatorJS 4.2.3 默认解压 BIOS/父 ROM，但 FBNeo 按 ZIP romset 名称查找它们；游戏页必须保持 `EJS_dontExtractBIOS = true`，并把各游戏目录中的完整资源 URL 传给模拟器。
 - EmulatorJS 4.2.3 在 `dontExtractBIOS` 模式下会错误地用完整 URL 写入虚拟文件系统；`prepare-emulator.mjs` 会将其修补为 ZIP 文件名。升级依赖后如果上游逻辑变化，准备脚本必须明确失败，不能静默跳过。
 - `prepare-emulator.mjs` 发现 `vendor/core-fbneo/` 时必须完整拿到普通、legacy、thread、thread-legacy 四个核心；缺一套就明确失败，不能静默退回 npm 原版导致 `kovplus2007` 在线上变成未知 ROM。

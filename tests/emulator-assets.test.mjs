@@ -5,6 +5,7 @@ import {
   emulatorRuntimeScripts,
   fbneoCoreFiles,
   patchEmulatorArchivePath,
+  patchEmulatorExternalFileData,
   validateFbneoCoreFiles
 } from "../scripts/emulator-assets.mjs";
 
@@ -19,6 +20,18 @@ test("嵌套 runtime URL 写入虚拟文件系统时只保留压缩包名称", (
 
 test("上游写入逻辑变化时拒绝生成可能失效的运行包", () => {
   assert.throws(() => patchEmulatorArchivePath("没有目标语句"), /找到 0 处/);
+});
+
+test("外部文件以字节视图写入，避免 FBNeo 读到空秘籍文件", () => {
+  const source = "before; this.writeFile(path, res.data); after;";
+  const patched = patchEmulatorExternalFileData(source);
+
+  assert.match(patched, /this\.writeFile\(path, new Uint8Array\(res\.data\)\)/);
+  assert.doesNotMatch(patched, /this\.writeFile\(path, res\.data\)/);
+});
+
+test("外部文件写入逻辑变化时停止生成运行包", () => {
+  assert.throws(() => patchEmulatorExternalFileData("没有目标语句"), /找到 0 处/);
 });
 
 test("单文件运行包包含 EmulatorJS 加载器要求的全部脚本", () => {
