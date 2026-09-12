@@ -16,7 +16,6 @@
         <strong id="game-title">正在装载游戏</strong>
       </div>
       <div class="player-actions">
-        <button class="icon-button fast-power-toggle" id="fast-power-toggle" type="button" aria-pressed="false" title="仅让玩家 1 的集气槽快速回满" hidden disabled>快速集气：关</button>
         <button class="icon-button move-list-trigger" id="move-list-trigger" type="button" aria-controls="move-list-dialog" aria-expanded="false" hidden>出招表</button>
         <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换到暗色模式">
           <span aria-hidden="true">☾</span><small>暗色</small>
@@ -63,11 +62,11 @@
           </div>
           <dl>
             <div><dt>方向</dt><dd>W A S D</dd></div>
-            <div><dt>动作</dt><dd>J K U I</dd></div>
-            <div><dt>投币</dt><dd>5</dd></div>
-            <div><dt>开始</dt><dd>Enter</dd></div>
+            <div><dt>动作</dt><dd>J K L ;</dd></div>
+            <div><dt>投币</dt><dd>1</dd></div>
+            <div><dt>开始</dt><dd>2</dd></div>
           </dl>
-          <p class="quick-guide-note">5 投币 · Enter 开始 · 自动保存到当前设备；重要存档可从模拟器菜单导出。</p>
+          <p class="quick-guide-note">1 投币 · 2 开始 · 自动保存到当前设备；重要存档可从模拟器菜单导出。</p>
         </div>
         <section class="move-list-desktop" id="move-list-desktop" aria-label="游戏出招表" hidden></section>
       </aside>
@@ -85,10 +84,10 @@
         </header>
         <div class="move-list-legend">
           <strong>本站键位</strong>
-          <span>招式 A = J（攻击）</span>
-          <span>B = K（跳跃）</span>
-          <span>C = U（选道具）</span>
-          <span>D = I（用道具）</span>
+          <span>攻击 = J（出招表里的 A）</span>
+          <span>跳跃 = K（出招表里的 B）</span>
+          <span>选道具 = L（出招表里的 C）</span>
+          <span>用道具 = ;（分号键，出招表里的 D）</span>
           <small>方向使用 WASD；斜方向要同时按两个键，例如 ↙ = S + A、↘ = S + D。</small>
         </div>
         <label class="move-list-search" for="move-list-search">

@@ -1,15 +1,25 @@
 const PLAYER_ONE_ARCADE_CONTROLS = Object.freeze({
-  // FBNeo 使用 RetroPad 编号；按 Neo Geo 的 A/B/C/D 顺序映射为 J/K/U/I。
+  // 键位源唯一，页面提示、出招表记法与测试都从这里对齐：J 攻击、K 跳跃、L 选道具、; 用道具，投币 1、开始 2。
+  // 索引就是传给 simulateInput 的 RetroPad 按键号。实测依据：索引 0 在三国战纪里是攻击（B 键）、索引 8 是跳跃（A 键）。
+  // 别按「A/B/C/D 依次排」去理解这个顺序——三国战纪的按键名与位次是 A=跳、B=攻击、C=道具，
+  // 早年页面写的「A = J（攻击）」把游戏内 A/B 说反了；街机同名按键在不同游戏里位次不同，
+  // 只认实测动作（按一下看角色做什么），不要按名称重排这四颗键，也不要信面板上的布局标签。
+  // 键值写 EmulatorJS keyMap 里的按键名（写成数字同样能解析，但键名可读且写错时调试模式会报警）；
+  // 分号必须写 "semi-colon"，'";"' 与 "186" 都无法被 keyLookup 解析，会退化成 -1 而静默失效。
+  // 末尾的 value2 不能改着玩：它既要显示在模拟器「控制设置」面板，又是 EmulatorJS 匹配物理手柄
+  // 按键的依据（gamepadEvent 里用 controlValue === e.label / e.index 判定），换成中文动作名会让手柄整路失效。
+  // 面板上那套「按钮1/按钮2/BUTTON_3/BUTTON_4」因此只能照留，它和游戏内按键名不同名，不是绑定错。
+  // 玩家真正要看的键位在「键盘」列，与页面提示、出招表口径一致。
   0: Object.freeze({ value: "j", value2: "BUTTON_2" }),
-  1: Object.freeze({ value: "u", value2: "BUTTON_4" }),
-  2: Object.freeze({ value: "5", value2: "SELECT" }),
-  3: Object.freeze({ value: "enter", value2: "START" }),
+  8: Object.freeze({ value: "k", value2: "BUTTON_1" }),
+  1: Object.freeze({ value: "l", value2: "BUTTON_4" }),
+  9: Object.freeze({ value: "semi-colon", value2: "BUTTON_3" }),
+  2: Object.freeze({ value: "1", value2: "SELECT" }),
+  3: Object.freeze({ value: "2", value2: "START" }),
   4: Object.freeze({ value: "w", value2: "DPAD_UP" }),
   5: Object.freeze({ value: "s", value2: "DPAD_DOWN" }),
   6: Object.freeze({ value: "a", value2: "DPAD_LEFT" }),
-  7: Object.freeze({ value: "d", value2: "DPAD_RIGHT" }),
-  8: Object.freeze({ value: "k", value2: "BUTTON_1" }),
-  9: Object.freeze({ value: "i", value2: "BUTTON_3" })
+  7: Object.freeze({ value: "d", value2: "DPAD_RIGHT" })
 });
 
 export function createArcadeDefaultControls() {

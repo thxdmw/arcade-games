@@ -1,10 +1,8 @@
 const KOV_FAST_POWER = Object.freeze({
   gameId: "kov",
   externalPath: "/fbneo/cheats/kov.ini",
-  sourceUrl: "/assets/cheats/kov.ini",
-  optionName: "fbneo-cheat-0-kov-Fast_Power_PL1",
-  disabledValue: "0 - Disabled",
-  enabledValue: "1 - Enabled"
+  sourceUrl: "/assets/cheats/kov.ini?v=fast-charge-v5",
+  optionName: "fbneo-cheat-0-kov-Fast_Charge_PL1"
 });
 
 export function getFastPowerFeature(game) {
@@ -18,10 +16,4 @@ export function configureGameFeatureFiles(target, feature) {
     ...(target.EJS_externalFiles ?? {}),
     [feature.externalPath]: feature.sourceUrl
   };
-}
-
-export function setFastPowerEnabled(emulator, feature, enabled) {
-  if (!feature || typeof emulator?.gameManager?.setVariable !== "function") return false;
-  emulator.gameManager.setVariable(feature.optionName, enabled ? feature.enabledValue : feature.disabledValue);
-  return true;
 }

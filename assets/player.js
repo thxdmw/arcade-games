@@ -6,7 +6,7 @@ import { createSaveRepository } from "./storage.js";
 import { installThemeToggle } from "./theme.js";
 import { installMoveListPanel } from "./move-list-panel.js";
 import { installPlayerHelpResize } from "./player-layout.js";
-import { configureGameFeatureFiles, getFastPowerFeature, setFastPowerEnabled } from "./game-features.js";
+import { configureGameFeatureFiles, getFastPowerFeature } from "./game-features.js";
 
 const elements = {
   shell: document.querySelector("#emulator-shell"),
@@ -20,13 +20,11 @@ const elements = {
   errorMessage: document.querySelector("#error-message"),
   title: document.querySelector("#game-title"),
   platform: document.querySelector("#game-platform"),
-  saveIndicator: document.querySelector("#save-indicator"),
-  fastPower: document.querySelector("#fast-power-toggle")
+  saveIndicator: document.querySelector("#save-indicator")
 };
 
 let stateObjectUrl = null;
 let fastPowerFeature = null;
-let fastPowerEnabled = false;
 const removeKeyboardBridge = installEmulatorKeyboardBridge(document, () => window.EJS_emulator);
 const removePlayerHelpResize = installPlayerHelpResize(document.querySelector("#player-help-resizer"));
 
@@ -41,14 +39,6 @@ function showError(title, message) {
 function updateSaveIndicator(message, active = true) {
   elements.saveIndicator.lastChild.textContent = message;
   elements.saveIndicator.classList.toggle("active", active);
-}
-
-function renderFastPowerToggle() {
-  elements.fastPower.hidden = !fastPowerFeature;
-  elements.fastPower.disabled = !fastPowerFeature || !window.EJS_emulator?.gameManager;
-  elements.fastPower.classList.toggle("active", fastPowerEnabled);
-  elements.fastPower.setAttribute("aria-pressed", String(fastPowerEnabled));
-  elements.fastPower.textContent = `快速集气：${fastPowerEnabled ? "开" : "关"}`;
 }
 
 function chooseResume(state) {
@@ -101,16 +91,10 @@ function installEmulator(game, urls, repository, resumeState) {
 
   window.EJS_ready = () => {
     elements.boot.hidden = true;
-    renderFastPowerToggle();
     updateSaveIndicator(repository.persistent ? "本地存档已连接" : "仅在本次会话保存", repository.persistent);
   };
   window.EJS_onGameStart = () => {
     elements.boot.hidden = true;
-    if (fastPowerFeature) {
-      fastPowerEnabled = false;
-      setFastPowerEnabled(window.EJS_emulator, fastPowerFeature, false);
-    }
-    renderFastPowerToggle();
     repository.recordPlayed(game.id).catch(console.error);
   };
   window.EJS_onSaveState = (payload) => {
@@ -162,7 +146,6 @@ async function init() {
     elements.bootTitle.textContent = `正在装载 ${game.title}`;
     installMoveListPanel(game.id);
     fastPowerFeature = getFastPowerFeature(game);
-    renderFastPowerToggle();
 
     const status = await probeGameResources(game);
     if (!status.ready) {
@@ -180,16 +163,6 @@ async function init() {
     showError("启动失败", error.message || "发生未知错误，请查看浏览器控制台。");
   }
 }
-
-elements.fastPower.addEventListener("click", () => {
-  const nextEnabled = !fastPowerEnabled;
-  if (!setFastPowerEnabled(window.EJS_emulator, fastPowerFeature, nextEnabled)) {
-    updateSaveIndicator("快速集气尚未就绪", false);
-    return;
-  }
-  fastPowerEnabled = nextEnabled;
-  renderFastPowerToggle();
-});
 
 document.querySelector("#fullscreen").addEventListener("click", async () => {
   try {
